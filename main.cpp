@@ -66,6 +66,7 @@ struct all_textures{
     struct button_textures buttons;
     struct name_textures names;
     struct info_textures info;
+    SDL_Texture *credits;
 };
 typedef struct all_textures programTxtr;
 
@@ -180,6 +181,10 @@ void load_textures(SDL_Renderer *renderer, programTxtr *textures)
     SDL_FreeSurface(surface);
     surface = SDL_LoadBMP("./textures/nine.bmp");
     textures->numbers.nine = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+
+    surface = SDL_LoadBMP("./textures/credits.bmp");
+    textures->credits = SDL_CreateTextureFromSurface(renderer, surface);
     SDL_FreeSurface(surface);
 }
 
@@ -906,6 +911,8 @@ int main(int argc, char *argv[])
     SDL_Rect randomizeButton;
     SDL_Rect startSortButton;
 
+    SDL_Rect credits;
+
     SDL_Rect timeInfo[5];
     
     SDL_Rect algorithmOption;
@@ -1086,6 +1093,11 @@ int main(int argc, char *argv[])
             
             timeInfo[0].w = 400 * sizeMultiplier;
             timeInfo[0].h = 30 * sizeMultiplier;
+
+            credits.w = 500 * sizeMultiplier;
+            credits.h = 50 * sizeMultiplier;
+            credits.x = 0;
+            credits.y = HEIGHT - credits.h;
 
             lastWIDTH = WIDTH;
             lastHEIGHT = HEIGHT;
@@ -1469,6 +1481,7 @@ int main(int argc, char *argv[])
             SDL_RenderCopy(renderer, textures.buttons.down.one, NULL, &down1);
             SDL_RenderCopy(renderer, textures.buttons.start, NULL, &startButton);
             SDL_RenderCopy(renderer, textures.info.size, NULL, &sizeTextRect);
+            SDL_RenderCopy(renderer, textures.credits, NULL, &credits);
 
             SDL_RenderPresent(renderer);
 
