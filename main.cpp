@@ -1,18 +1,190 @@
 #include <iostream>
-#include <SDL2/SDL.h>
-#include <unistd.h>
 #include <chrono>
 #include <thread>
+#include "src/include/SDL2/SDL.h"
 
-int WIDTH = 1100, HEIGHT = 900;
+int WIDTH = 800, HEIGHT = 600;
 
 int delay = 0;
 bool programQuit = false;
 
 float sizeMultiplier = 1;
 
+struct time{
+    SDL_Texture *phrase;
+    SDL_Texture *milisec;
+    SDL_Texture *sec;
+    SDL_Texture *min;
+    SDL_Texture *hour;
+};
+struct info_textures{
+    SDL_Texture *size;
+    SDL_Texture *quit;
+    struct time time;
+};
+struct name_textures{
+    SDL_Texture *bubble;
+    SDL_Texture *selection;
+    SDL_Texture *insertion;
+    SDL_Texture *merge;
+    SDL_Texture *quick;
+};
+struct size_buttons{
+    SDL_Texture *one;
+    SDL_Texture *ten;
+    SDL_Texture *hundred;
+};
+struct delay_button{
+    SDL_Texture *on;
+    SDL_Texture *off;
+    SDL_Texture *temporary;
+};
+struct button_textures{
+    SDL_Texture *next;
+    SDL_Texture *previous;
+    SDL_Texture *start;
+    SDL_Texture *sort;
+    SDL_Texture *randomize;
+    struct delay_button delay;
+    struct size_buttons up;
+    struct size_buttons down;
+};
+struct number_textures{
+    SDL_Texture *zero;
+    SDL_Texture *one;
+    SDL_Texture *two;
+    SDL_Texture *three;
+    SDL_Texture *four;
+    SDL_Texture *five;
+    SDL_Texture *six;
+    SDL_Texture *seven;
+    SDL_Texture *eight;
+    SDL_Texture *nine;
+};
+struct all_textures{
+    struct number_textures numbers;
+    struct button_textures buttons;
+    struct name_textures names;
+    struct info_textures info;
+};
+typedef struct all_textures programTxtr;
+
+void load_textures(SDL_Renderer *renderer, programTxtr *textures)
+{
+    SDL_Surface *surface = SDL_LoadBMP("./textures/next_button.bmp");
+    textures->buttons.next = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+    surface = SDL_LoadBMP("./textures/previous_button.bmp");
+    textures->buttons.previous = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+    surface = SDL_LoadBMP("./textures/start_button.bmp");
+    textures->buttons.start = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+    surface = SDL_LoadBMP("./textures/delay_button.bmp");
+    textures->buttons.delay.off = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+    surface = SDL_LoadBMP("./textures/delay_button_selected.bmp");
+    textures->buttons.delay.on = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+    surface = SDL_LoadBMP("./textures/start_sort_button.bmp");
+    textures->buttons.sort = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+    surface = SDL_LoadBMP("./textures/randomize_button.bmp");
+    textures->buttons.randomize = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+
+    surface = SDL_LoadBMP("./textures/sizeText.bmp");
+    textures->info.size = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+    surface = SDL_LoadBMP("./textures/esc_info.bmp");
+    textures->info.quit = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+    surface = SDL_LoadBMP("./textures/executado_info.bmp");
+    textures->info.time.phrase = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+    surface = SDL_LoadBMP("./textures/milisec_info.bmp");
+    textures->info.time.milisec = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+    surface = SDL_LoadBMP("./textures/sec_info.bmp");
+    textures->info.time.sec = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+    surface = SDL_LoadBMP("./textures/min_info.bmp");
+    textures->info.time.min = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+    surface = SDL_LoadBMP("./textures/hour_info.bmp");
+    textures->info.time.hour = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+
+    surface = SDL_LoadBMP("./textures/up100_button.bmp");
+    textures->buttons.up.hundred = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+    surface = SDL_LoadBMP("./textures/up10_button.bmp");
+    textures->buttons.up.ten = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+    surface = SDL_LoadBMP("./textures/up1_button.bmp");
+    textures->buttons.up.one = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+
+    surface = SDL_LoadBMP("./textures/down100_button.bmp");
+    textures->buttons.down.hundred = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+    surface = SDL_LoadBMP("./textures/down10_button.bmp");
+    textures->buttons.down.ten = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+    surface = SDL_LoadBMP("./textures/down1_button.bmp");
+    textures->buttons.down.one = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+
+    surface = SDL_LoadBMP("./textures/insertion_sort_button.bmp");
+    textures->names.insertion = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+    surface = SDL_LoadBMP("./textures/bubble_sort_button.bmp");
+    textures->names.bubble = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+    surface = SDL_LoadBMP("./textures/selection_sort_button.bmp");
+    textures->names.selection = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+    surface = SDL_LoadBMP("./textures/quick_sort_button.bmp");
+    textures->names.quick = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+    surface = SDL_LoadBMP("./textures/merge_sort_button.bmp");
+    textures->names.merge = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+
+    surface = SDL_LoadBMP("./textures/zero.bmp");
+    textures->numbers.zero = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+    surface = SDL_LoadBMP("./textures/one.bmp");
+    textures->numbers.one = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+    surface = SDL_LoadBMP("./textures/two.bmp");
+    textures->numbers.two = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+    surface = SDL_LoadBMP("./textures/three.bmp");
+    textures->numbers.three = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+    surface = SDL_LoadBMP("./textures/four.bmp");
+    textures->numbers.four = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+    surface = SDL_LoadBMP("./textures/five.bmp");
+    textures->numbers.five = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+    surface = SDL_LoadBMP("./textures/six.bmp");
+    textures->numbers.six = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+    surface = SDL_LoadBMP("./textures/seven.bmp");
+    textures->numbers.seven = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+    surface = SDL_LoadBMP("./textures/eight.bmp");
+    textures->numbers.eight = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+    surface = SDL_LoadBMP("./textures/nine.bmp");
+    textures->numbers.nine = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+}
+
 //Mostra os valores do vetor na tela
-void showVec(int vec[], float vecSize, SDL_Renderer *renderer, SDL_Texture * quitTexture, bool *abort, int cmp1 = -1, int cmp2 = -1, int base = -1)
+void showVec(int vec[], float vecSize, SDL_Renderer *renderer, programTxtr *textures, bool *abort, int cmp1 = -1, int cmp2 = -1, int base = -1)
 {
     SDL_Rect rect, quit;
     quit.w = 500 * sizeMultiplier;
@@ -65,13 +237,13 @@ void showVec(int vec[], float vecSize, SDL_Renderer *renderer, SDL_Texture * qui
         SDL_RenderFillRect(renderer, &rect);
     }
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    SDL_RenderCopy(renderer, quitTexture, NULL, &quit);
+    SDL_RenderCopy(renderer, textures->info.quit, NULL, &quit);
     SDL_RenderPresent(renderer);
-    std::this_thread::sleep_for(std::chrono::milliseconds(delay));
+    SDL_Delay(delay);
 }
 
 //Completa as barras com a cor verde gradativamente
-void showCompleteVec(int vec[], int vecSize, SDL_Renderer *renderer, SDL_Texture * quitTexture, bool *abort)
+void showCompleteVec(int vec[], int vecSize, SDL_Renderer *renderer, programTxtr *textures, bool *abort)
 {
     SDL_Event event;
 
@@ -147,12 +319,12 @@ void showCompleteVec(int vec[], int vecSize, SDL_Renderer *renderer, SDL_Texture
         }
         complete++;
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-        SDL_RenderCopy(renderer, quitTexture, NULL, &quit);
+        SDL_RenderCopy(renderer, textures->info.quit, NULL, &quit);
         SDL_RenderPresent(renderer);
         if(size < 2000)
         {
             tempDelay = 250/size;
-            std::this_thread::sleep_for(std::chrono::milliseconds(tempDelay));
+            SDL_Delay(tempDelay);
         }
     }
 }
@@ -188,7 +360,7 @@ void randomize(int vec[], int vecSize)
     }
 }
 
-void insertionSort(int vec[], int vecSize, SDL_Renderer *renderer, SDL_Texture * quitTexture, bool *abort)
+void insertionSort(int vec[], int vecSize, SDL_Renderer *renderer, programTxtr *textures, bool *abort)
 {
     SDL_Event event;
     int aux, a, b;
@@ -232,14 +404,14 @@ void insertionSort(int vec[], int vecSize, SDL_Renderer *renderer, SDL_Texture *
                 vec[b] = aux;
                 a--;
                 b--;
-                showVec(vec, vecSize, renderer, quitTexture, abort, b, a);
+                showVec(vec, vecSize, renderer, textures, abort, b, a);
             }
         }
-        showVec(vec, vecSize, renderer, quitTexture, abort, i + 1, i);
+        showVec(vec, vecSize, renderer, textures, abort, i + 1, i);
     }
 }
 
-void bubbleSort(int vec[], int vecSize, SDL_Renderer * renderer, SDL_Texture * quitTexture, bool *abort)
+void bubbleSort(int vec[], int vecSize, SDL_Renderer * renderer, programTxtr *textures, bool *abort)
 {
     SDL_Event event;
     int aux;
@@ -280,7 +452,7 @@ void bubbleSort(int vec[], int vecSize, SDL_Renderer * renderer, SDL_Texture * q
                 vec[i] = vec[j];
                 vec[j] = aux;
             }
-            showVec(vec, vecSize, renderer, quitTexture, abort, i, j);
+            showVec(vec, vecSize, renderer, textures, abort, i, j);
         }
     }
 
@@ -294,7 +466,7 @@ void swap(int *x, int *y)
     *y = aux;
 }
 
-void quickSort(int vec[], int start, int end, int vecSize, SDL_Renderer *renderer, SDL_Texture * quitTexture, bool *abort)
+void quickSort(int vec[], int start, int end, int vecSize, SDL_Renderer *renderer, programTxtr *textures, bool *abort)
 {
     SDL_Event event;
     int i, j, key;
@@ -305,7 +477,7 @@ void quickSort(int vec[], int start, int end, int vecSize, SDL_Renderer *rendere
             if(vec[start] > vec[end])
             {
                 swap(&vec[start], &vec[end]);
-                showVec(vec, vecSize, renderer, quitTexture, abort, start, end);
+                showVec(vec, vecSize, renderer, textures, abort, start, end);
             }
         }
     }
@@ -346,35 +518,35 @@ void quickSort(int vec[], int start, int end, int vecSize, SDL_Renderer *rendere
                 }        
             }
             i++;
-            showVec(vec, vecSize, renderer, quitTexture, abort, i, j, start);
+            showVec(vec, vecSize, renderer, textures, abort, i, j, start);
             while(vec[i] < key)
             {
                 i++;
-                showVec(vec, vecSize, renderer, quitTexture, abort, i, j, start);
+                showVec(vec, vecSize, renderer, textures, abort, i, j, start);
             }
             while(vec[j] > key)
             {
                 j--;
-                showVec(vec, vecSize, renderer, quitTexture, abort, i, j, start);
+                showVec(vec, vecSize, renderer, textures, abort, i, j, start);
             }
             if(j > i)
             {
                 swap(&vec[i], &vec[j]);
-                showVec(vec, vecSize, renderer, quitTexture, abort, i, j, start);
+                showVec(vec, vecSize, renderer, textures, abort, i, j, start);
             }
         }
         swap(&vec[start], &vec[j]);
-        showVec(vec, vecSize, renderer, quitTexture, abort, start, j);
+        showVec(vec, vecSize, renderer, textures, abort, start, j);
         if(!*abort){
-            quickSort(vec, start, j - 1, vecSize, renderer, quitTexture, abort);
+            quickSort(vec, start, j - 1, vecSize, renderer, textures, abort);
         }
         if(!*abort){
-            quickSort(vec, j + 1, end, vecSize, renderer, quitTexture, abort);
+            quickSort(vec, j + 1, end, vecSize, renderer, textures, abort);
         }     
     }
 }
 
-void selectionSort(int vec[], int vecSize, SDL_Renderer * renderer, SDL_Texture * quitTexture, bool *abort)
+void selectionSort(int vec[], int vecSize, SDL_Renderer * renderer, programTxtr *textures, bool *abort)
 {
     SDL_Event event;
     int cmp, aux;
@@ -415,18 +587,18 @@ void selectionSort(int vec[], int vecSize, SDL_Renderer * renderer, SDL_Texture 
             }
             if(vecSize < 1000)
             {
-                showVec(vec, vecSize, renderer, quitTexture, abort, cmp, j, i);
+                showVec(vec, vecSize, renderer, textures, abort, cmp, j, i);
             }   
         } 
         aux = vec[i];
         vec[i] = vec[cmp];
         vec[cmp] = aux;
-        showVec(vec, vecSize, renderer, quitTexture, abort, i, cmp);
+        showVec(vec, vecSize, renderer, textures, abort, i, cmp);
     }
     
 }
 
-void intercalate(int vec[], int start, int end, int mid, int vecSize, SDL_Renderer * renderer, SDL_Texture * quitTexture, bool *abort){
+void intercalate(int vec[], int start, int end, int mid, int vecSize, SDL_Renderer * renderer, programTxtr *textures, bool *abort){
     SDL_Event event;
     int i, aux[vecSize], freePos = start, start1 = start, start2 = mid + 1;
     while(start1 <= mid && start2 <= end && *abort == false){
@@ -464,11 +636,11 @@ void intercalate(int vec[], int start, int end, int mid, int vecSize, SDL_Render
             start2++;
             if(start1 == start2)
             {
-                showVec(vec, vecSize, renderer, quitTexture, abort, start2, start1 - 1);
+                showVec(vec, vecSize, renderer, textures, abort, start2, start1 - 1);
             }
             else
             {
-                showVec(vec, vecSize, renderer, quitTexture, abort, start2, start1);
+                showVec(vec, vecSize, renderer, textures, abort, start2, start1);
             }
         }
         else{
@@ -476,11 +648,11 @@ void intercalate(int vec[], int start, int end, int mid, int vecSize, SDL_Render
             start1++;
             if(start1 == start2)
             {
-                showVec(vec, vecSize, renderer, quitTexture, abort, start2, start1 - 1);
+                showVec(vec, vecSize, renderer, textures, abort, start2, start1 - 1);
             }
             else
             {
-                showVec(vec, vecSize, renderer, quitTexture, abort, start2, start1);
+                showVec(vec, vecSize, renderer, textures, abort, start2, start1);
             }
         }
         freePos++;
@@ -492,11 +664,11 @@ void intercalate(int vec[], int start, int end, int mid, int vecSize, SDL_Render
             freePos++;
             if(i == mid)
             {
-                showVec(vec, vecSize, renderer, quitTexture, abort, mid, i - 1);
+                showVec(vec, vecSize, renderer, textures, abort, mid, i - 1);
             }
             else
             {
-                showVec(vec, vecSize, renderer, quitTexture, abort, mid, i);
+                showVec(vec, vecSize, renderer, textures, abort, mid, i);
             }
         }
         for(i = start2; i <= end; i++){
@@ -504,29 +676,29 @@ void intercalate(int vec[], int start, int end, int mid, int vecSize, SDL_Render
             freePos++;
             if(i == end)
             {
-                showVec(vec, vecSize, renderer, quitTexture, abort, end, i - 1);
+                showVec(vec, vecSize, renderer, textures, abort, end, i - 1);
             }
             else
             {
-                showVec(vec, vecSize, renderer, quitTexture, abort, end, i);
+                showVec(vec, vecSize, renderer, textures, abort, end, i);
             }
         }
         for(i = start; i <= end; i++){
             vec[i] = aux[i];
             if(i == end)
             {
-                showVec(vec, vecSize, renderer, quitTexture, abort, end, i - 1);
+                showVec(vec, vecSize, renderer, textures, abort, end, i - 1);
             }
             else
             {
-                showVec(vec, vecSize, renderer, quitTexture, abort, end, i);
+                showVec(vec, vecSize, renderer, textures, abort, end, i);
             }
         }        
     }
 
 }
 
-void mergeSort(int vec[], int start, int end, int vecSize, SDL_Renderer * renderer, SDL_Texture * quitTexture, bool *abort){
+void mergeSort(int vec[], int start, int end, int vecSize, SDL_Renderer * renderer, programTxtr *textures, bool *abort){
     int mid;
     if(*abort == true)
     {
@@ -535,9 +707,152 @@ void mergeSort(int vec[], int start, int end, int vecSize, SDL_Renderer * render
     if(start < end)
     {
         mid = (start + end)/2;
-        mergeSort(vec, start, mid, vecSize, renderer, quitTexture, abort);
-        mergeSort(vec, mid + 1, end, vecSize, renderer, quitTexture, abort);
-        intercalate(vec, start, end, mid, vecSize, renderer, quitTexture, abort);
+        mergeSort(vec, start, mid, vecSize, renderer, textures, abort);
+        mergeSort(vec, mid + 1, end, vecSize, renderer, textures, abort);
+        intercalate(vec, start, end, mid, vecSize, renderer, textures, abort);
+    }
+}
+
+uint64_t getTime(){
+    using namespace std::chrono;
+    return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+}
+
+void showTime(int time, int type, SDL_Rect *rect, SDL_Renderer *renderer, programTxtr *textures){
+    int unity, decimal, hundred;
+
+    hundred = time / 100;
+    time -= (hundred * 100);
+    decimal = time / 10;
+    time -= (decimal * 10);
+    unity = time;
+
+    SDL_Rect numSlots[3], text;
+    numSlots[0] = *rect;
+    numSlots[0].w = 20 * sizeMultiplier;
+    numSlots[1] = numSlots[0];
+    numSlots[1].x += numSlots[1].w;
+    numSlots[2] = numSlots[1];
+    numSlots[2].x += numSlots[2].w;
+
+    text.w = 50 * sizeMultiplier;
+    text.h = 30 * sizeMultiplier;
+
+    int i = 0;
+    if(hundred != 0){
+        switch(hundred){
+            case 1:
+            SDL_RenderCopy(renderer, textures->numbers.one, NULL, &numSlots[i]);
+            break;
+            case 2:
+            SDL_RenderCopy(renderer, textures->numbers.two, NULL, &numSlots[i]);
+            break;
+            case 3:
+            SDL_RenderCopy(renderer, textures->numbers.three, NULL, &numSlots[i]);
+            break;
+            case 4:
+            SDL_RenderCopy(renderer, textures->numbers.four, NULL, &numSlots[i]);
+            break;
+            case 5:
+            SDL_RenderCopy(renderer, textures->numbers.five, NULL, &numSlots[i]);
+            break;
+            case 6:
+            SDL_RenderCopy(renderer, textures->numbers.six, NULL, &numSlots[i]);
+            break;
+            case 7:
+            SDL_RenderCopy(renderer, textures->numbers.seven, NULL, &numSlots[i]);
+            break;
+            case 8:
+            SDL_RenderCopy(renderer, textures->numbers.eight, NULL, &numSlots[i]);
+            break;
+            case 9:
+            SDL_RenderCopy(renderer, textures->numbers.nine, NULL, &numSlots[i]);
+        }
+        i++;
+    }
+    switch(decimal){
+        case 0:
+        if(hundred == 0){
+            i--;
+        }
+        else{
+            SDL_RenderCopy(renderer, textures->numbers.zero, NULL, &numSlots[i]);
+        }
+        break;
+        case 1:
+        SDL_RenderCopy(renderer, textures->numbers.one, NULL, &numSlots[i]);
+        break;
+        case 2:
+        SDL_RenderCopy(renderer, textures->numbers.two, NULL, &numSlots[i]);
+        break;
+        case 3:
+        SDL_RenderCopy(renderer, textures->numbers.three, NULL, &numSlots[i]);
+        break;
+        case 4:
+        SDL_RenderCopy(renderer, textures->numbers.four, NULL, &numSlots[i]);
+        break;
+        case 5:
+        SDL_RenderCopy(renderer, textures->numbers.five, NULL, &numSlots[i]);
+        break;
+        case 6:
+        SDL_RenderCopy(renderer, textures->numbers.six, NULL, &numSlots[i]);
+        break;
+        case 7:
+        SDL_RenderCopy(renderer, textures->numbers.seven, NULL, &numSlots[i]);
+        break;
+        case 8:
+        SDL_RenderCopy(renderer, textures->numbers.eight, NULL, &numSlots[i]);
+        break;
+        case 9:
+        SDL_RenderCopy(renderer, textures->numbers.nine, NULL, &numSlots[i]);
+    }
+    i++;
+    switch(unity){
+        case 0:
+        SDL_RenderCopy(renderer, textures->numbers.zero, NULL, &numSlots[i]);
+        break;
+        case 1:
+        SDL_RenderCopy(renderer, textures->numbers.one, NULL, &numSlots[i]);
+        break;
+        case 2:
+        SDL_RenderCopy(renderer, textures->numbers.two, NULL, &numSlots[i]);
+        break;
+        case 3:
+        SDL_RenderCopy(renderer, textures->numbers.three, NULL, &numSlots[i]);
+        break;
+        case 4:
+        SDL_RenderCopy(renderer, textures->numbers.four, NULL, &numSlots[i]);
+        break;
+        case 5:
+        SDL_RenderCopy(renderer, textures->numbers.five, NULL, &numSlots[i]);
+        break;
+        case 6:
+        SDL_RenderCopy(renderer, textures->numbers.six, NULL, &numSlots[i]);
+        break;
+        case 7:
+        SDL_RenderCopy(renderer, textures->numbers.seven, NULL, &numSlots[i]);
+        break;
+        case 8:
+        SDL_RenderCopy(renderer, textures->numbers.eight, NULL, &numSlots[i]);
+        break;
+        case 9:
+        SDL_RenderCopy(renderer, textures->numbers.nine, NULL, &numSlots[i]);
+    }
+
+    text.x = numSlots[i].x + numSlots[i].w + 5 * sizeMultiplier;
+    text.y = numSlots[i].y;
+    switch(type){
+        case 1:
+        SDL_RenderCopy(renderer, textures->info.time.hour, NULL, &text);
+        break;
+        case 2:
+        SDL_RenderCopy(renderer, textures->info.time.min, NULL, &text);
+        break;
+        case 3:
+        SDL_RenderCopy(renderer, textures->info.time.sec, NULL, &text);
+        break;
+        case 4:
+        SDL_RenderCopy(renderer, textures->info.time.milisec, NULL, &text);
     }
 }
 
@@ -560,106 +875,8 @@ int main(int argc, char *argv[])
     SDL_RenderClear(renderer);
     SDL_RenderPresent(renderer);
 
-    //Carregando todas as texturas
-    SDL_Surface *surface = SDL_LoadBMP("./textures/next_button.bmp");
-    SDL_Texture *nextButton_txtr = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_FreeSurface(surface);
-    surface = SDL_LoadBMP("./textures/previous_button.bmp");
-    SDL_Texture *previousButton_txtr = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_FreeSurface(surface);
-
-    surface = SDL_LoadBMP("./textures/sizeText.bmp");
-    SDL_Texture *sizeText_txtr = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_FreeSurface(surface);
-
-    surface = SDL_LoadBMP("./textures/up100_button.bmp");
-    SDL_Texture *up100Button_txtr = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_FreeSurface(surface);
-    surface = SDL_LoadBMP("./textures/up10_button.bmp");
-    SDL_Texture *up10Button_txtr = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_FreeSurface(surface);
-    surface = SDL_LoadBMP("./textures/up1_button.bmp");
-    SDL_Texture *up1Button_txtr = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_FreeSurface(surface);
-
-    surface = SDL_LoadBMP("./textures/down100_button.bmp");
-    SDL_Texture *down100Button_txtr = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_FreeSurface(surface);
-    surface = SDL_LoadBMP("./textures/down10_button.bmp");
-    SDL_Texture *down10Button_txtr = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_FreeSurface(surface);
-    surface = SDL_LoadBMP("./textures/down1_button.bmp");
-    SDL_Texture *down1Button_txtr = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_FreeSurface(surface);
-
-    surface = SDL_LoadBMP("./textures/insertion_sort_button.bmp");
-    SDL_Texture *insertionButton_txtr = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_FreeSurface(surface);
-    surface = SDL_LoadBMP("./textures/bubble_sort_button.bmp");
-    SDL_Texture *bubbleButton_txtr = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_FreeSurface(surface);
-    surface = SDL_LoadBMP("./textures/selection_sort_button.bmp");
-    SDL_Texture *selectionButton_txtr = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_FreeSurface(surface);
-    surface = SDL_LoadBMP("./textures/quick_sort_button.bmp");
-    SDL_Texture *quickButton_txtr = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_FreeSurface(surface);
-    surface = SDL_LoadBMP("./textures/merge_sort_button.bmp");
-    SDL_Texture *mergeButton_txtr = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_FreeSurface(surface);
-
-    surface = SDL_LoadBMP("./textures/zero.bmp");
-    SDL_Texture *zero_txtr = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_FreeSurface(surface);
-    surface = SDL_LoadBMP("./textures/one.bmp");
-    SDL_Texture *one_txtr = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_FreeSurface(surface);
-    surface = SDL_LoadBMP("./textures/two.bmp");
-    SDL_Texture *two_txtr = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_FreeSurface(surface);
-    surface = SDL_LoadBMP("./textures/three.bmp");
-    SDL_Texture *three_txtr = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_FreeSurface(surface);
-    surface = SDL_LoadBMP("./textures/four.bmp");
-    SDL_Texture *four_txtr = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_FreeSurface(surface);
-    surface = SDL_LoadBMP("./textures/five.bmp");
-    SDL_Texture *five_txtr = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_FreeSurface(surface);
-    surface = SDL_LoadBMP("./textures/six.bmp");
-    SDL_Texture *six_txtr = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_FreeSurface(surface);
-    surface = SDL_LoadBMP("./textures/seven.bmp");
-    SDL_Texture *seven_txtr = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_FreeSurface(surface);
-    surface = SDL_LoadBMP("./textures/eight.bmp");
-    SDL_Texture *eight_txtr = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_FreeSurface(surface);
-    surface = SDL_LoadBMP("./textures/nine.bmp");
-    SDL_Texture *nine_txtr = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_FreeSurface(surface);
-
-    surface = SDL_LoadBMP("./textures/start_button.bmp");
-    SDL_Texture *start_txtr = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_FreeSurface(surface);
-
-    surface = SDL_LoadBMP("./textures/delay_button.bmp");
-    SDL_Texture *delay_button_txtr = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_FreeSurface(surface);
-    surface = SDL_LoadBMP("./textures/delay_button_selected.bmp");
-    SDL_Texture *delaySelected_txtr = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_FreeSurface(surface);
-    SDL_Texture *tempDelay_txtr;
-    surface = SDL_LoadBMP("./textures/esc_info.bmp");
-    SDL_Texture *escInfo_txtr = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_FreeSurface(surface);
-    surface = SDL_LoadBMP("./textures/start_sort_button.bmp");
-    SDL_Texture *startSort_txtr = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_FreeSurface(surface);
-    surface = SDL_LoadBMP("./textures/randomize_button.bmp");
-    SDL_Texture *randomize_txtr = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_FreeSurface(surface);
-    //Fim do carregamento de texturas
+    programTxtr textures;
+    load_textures(renderer, &textures);
 
     SDL_Event event;
 
@@ -669,7 +886,7 @@ int main(int argc, char *argv[])
     int vec[maxSize];
     int algType = 0, lastAlgType = 0;
     int currentOption = 1, temporaryDelay = 0;
-    float size = 150;
+    float size = 100;
     int mouseX, mouseY;
     int lastWIDTH = 0, lastHEIGHT = 0;
     bool leftMouseDown, escDown;
@@ -677,6 +894,8 @@ int main(int argc, char *argv[])
     int up1selected = 0, up10selected = 0, up100selected = 0, down1selected = 0, down10selected = 0, down100selected = 0, nextSelected = 0, prevSelected = 0;
     const int selectDelay = 4;
     int sizeUnity, sizeDecimal, sizeHundred, sizeThousand, sizeAux;
+    uint64_t sortStartTime, sortEndTime, sortTotalTime;
+    int milisec, sec, min, hour;
     uint32_t frameStart;
     int frameTime;
     const int FPS = 30, frameDelay = 1000/FPS;
@@ -686,6 +905,8 @@ int main(int argc, char *argv[])
     SDL_Rect delayOption;
     SDL_Rect randomizeButton;
     SDL_Rect startSortButton;
+
+    SDL_Rect timeInfo[5];
     
     SDL_Rect algorithmOption;
     SDL_Rect nextOption, previousOption;
@@ -759,7 +980,7 @@ int main(int argc, char *argv[])
                 {
                     sizeMultiplier = float(HEIGHT) / 900;
                 }
-                std::cout << "Proporção: " << sizeMultiplier << std::endl;
+                std::cout << "Proporcao: " << sizeMultiplier << std::endl;
             }
             else
             {
@@ -858,10 +1079,13 @@ int main(int argc, char *argv[])
             down1.x = down10.x - down1.w - 20 * sizeMultiplier;
             down1.y = down10.y + ((down10.h - down1.h)/2);
 
-            startButton.h = 150 * sizeMultiplier;
             startButton.w = 250 * sizeMultiplier;
-            startButton.y = vecSizeOption.y + 200 * sizeMultiplier;
+            startButton.h = 150 * sizeMultiplier;
             startButton.x = (WIDTH/2) - 125 * sizeMultiplier;
+            startButton.y = vecSizeOption.y + 200 * sizeMultiplier;
+            
+            timeInfo[0].w = 400 * sizeMultiplier;
+            timeInfo[0].h = 30 * sizeMultiplier;
 
             lastWIDTH = WIDTH;
             lastHEIGHT = HEIGHT;
@@ -883,32 +1107,32 @@ int main(int argc, char *argv[])
             SDL_RenderClear(renderer);
             SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 
-            SDL_SetTextureColorMod(nextButton_txtr, 255, 255, 255);
-            SDL_SetTextureColorMod(previousButton_txtr, 255, 255, 255);
-            SDL_SetTextureColorMod(up100Button_txtr, 255, 255, 255);
-            SDL_SetTextureColorMod(up10Button_txtr, 255, 255, 255);
-            SDL_SetTextureColorMod(up1Button_txtr, 255, 255, 255);
-            SDL_SetTextureColorMod(down100Button_txtr, 255, 255, 255);
-            SDL_SetTextureColorMod(down10Button_txtr, 255, 255, 255);
-            SDL_SetTextureColorMod(down1Button_txtr, 255, 255, 255);
-            SDL_SetTextureColorMod(start_txtr, 255, 255, 255);
+            SDL_SetTextureColorMod(textures.buttons.next, 255, 255, 255);
+            SDL_SetTextureColorMod(textures.buttons.previous, 255, 255, 255);
+            SDL_SetTextureColorMod(textures.buttons.up.hundred, 255, 255, 255);
+            SDL_SetTextureColorMod(textures.buttons.up.ten, 255, 255, 255);
+            SDL_SetTextureColorMod(textures.buttons.up.one, 255, 255, 255);
+            SDL_SetTextureColorMod(textures.buttons.down.hundred, 255, 255, 255);
+            SDL_SetTextureColorMod(textures.buttons.down.ten, 255, 255, 255);
+            SDL_SetTextureColorMod(textures.buttons.down.one, 255, 255, 255);
+            SDL_SetTextureColorMod(textures.buttons.start, 255, 255, 255);
             
             switch(currentOption)//Mostra o nome de cada algorítmo
             {
                 case 1:
-                SDL_RenderCopy(renderer, bubbleButton_txtr, NULL, &algorithmOption);
+                SDL_RenderCopy(renderer, textures.names.bubble, NULL, &algorithmOption);
                 break;
                 case 2:
-                SDL_RenderCopy(renderer, selectionButton_txtr, NULL, &algorithmOption);
+                SDL_RenderCopy(renderer, textures.names.selection, NULL, &algorithmOption);
                 break;
                 case 3:
-                SDL_RenderCopy(renderer, insertionButton_txtr, NULL, &algorithmOption);
+                SDL_RenderCopy(renderer, textures.names.insertion, NULL, &algorithmOption);
                 break;
                 case 4:
-                SDL_RenderCopy(renderer, mergeButton_txtr, NULL, &algorithmOption);
+                SDL_RenderCopy(renderer, textures.names.merge, NULL, &algorithmOption);
                 break;
                 case 5:
-                SDL_RenderCopy(renderer, quickButton_txtr, NULL, &algorithmOption);
+                SDL_RenderCopy(renderer, textures.names.quick, NULL, &algorithmOption);
                 break;//presente para caso haja a implementação de um novo algorítmo
             }
 
@@ -927,136 +1151,136 @@ int main(int argc, char *argv[])
             switch(sizeUnity)
             {
                 case 0:
-                SDL_RenderCopy(renderer, zero_txtr, NULL, &sizeSlot4);
+                SDL_RenderCopy(renderer, textures.numbers.zero, NULL, &sizeSlot4);
                 break;
                 case 1:
-                SDL_RenderCopy(renderer, one_txtr, NULL, &sizeSlot4);
+                SDL_RenderCopy(renderer, textures.numbers.one, NULL, &sizeSlot4);
                 break;
                 case 2:
-                SDL_RenderCopy(renderer, two_txtr, NULL, &sizeSlot4);
+                SDL_RenderCopy(renderer, textures.numbers.two, NULL, &sizeSlot4);
                 break;
                 case 3:
-                SDL_RenderCopy(renderer, three_txtr, NULL, &sizeSlot4);
+                SDL_RenderCopy(renderer, textures.numbers.three, NULL, &sizeSlot4);
                 break;
                 case 4:
-                SDL_RenderCopy(renderer, four_txtr, NULL, &sizeSlot4);
+                SDL_RenderCopy(renderer, textures.numbers.four, NULL, &sizeSlot4);
                 break;
                 case 5:
-                SDL_RenderCopy(renderer, five_txtr, NULL, &sizeSlot4);
+                SDL_RenderCopy(renderer, textures.numbers.five, NULL, &sizeSlot4);
                 break;
                 case 6:
-                SDL_RenderCopy(renderer, six_txtr, NULL, &sizeSlot4);
+                SDL_RenderCopy(renderer, textures.numbers.six, NULL, &sizeSlot4);
                 break;
                 case 7:
-                SDL_RenderCopy(renderer, seven_txtr, NULL, &sizeSlot4);
+                SDL_RenderCopy(renderer, textures.numbers.seven, NULL, &sizeSlot4);
                 break;
                 case 8:
-                SDL_RenderCopy(renderer, eight_txtr, NULL, &sizeSlot4);
+                SDL_RenderCopy(renderer, textures.numbers.eight, NULL, &sizeSlot4);
                 break;
                 case 9:
-                SDL_RenderCopy(renderer, nine_txtr, NULL, &sizeSlot4);
+                SDL_RenderCopy(renderer, textures.numbers.nine, NULL, &sizeSlot4);
             }
             switch(sizeDecimal)
             {
                 case 0:
-                SDL_RenderCopy(renderer, zero_txtr, NULL, &sizeSlot3);
+                SDL_RenderCopy(renderer, textures.numbers.zero, NULL, &sizeSlot3);
                 break;
                 case 1:
-                SDL_RenderCopy(renderer, one_txtr, NULL, &sizeSlot3);
+                SDL_RenderCopy(renderer, textures.numbers.one, NULL, &sizeSlot3);
                 break;
                 case 2:
-                SDL_RenderCopy(renderer, two_txtr, NULL, &sizeSlot3);
+                SDL_RenderCopy(renderer, textures.numbers.two, NULL, &sizeSlot3);
                 break;
                 case 3:
-                SDL_RenderCopy(renderer, three_txtr, NULL, &sizeSlot3);
+                SDL_RenderCopy(renderer, textures.numbers.three, NULL, &sizeSlot3);
                 break;
                 case 4:
-                SDL_RenderCopy(renderer, four_txtr, NULL, &sizeSlot3);
+                SDL_RenderCopy(renderer, textures.numbers.four, NULL, &sizeSlot3);
                 break;
                 case 5:
-                SDL_RenderCopy(renderer, five_txtr, NULL, &sizeSlot3);
+                SDL_RenderCopy(renderer, textures.numbers.five, NULL, &sizeSlot3);
                 break;
                 case 6:
-                SDL_RenderCopy(renderer, six_txtr, NULL, &sizeSlot3);
+                SDL_RenderCopy(renderer, textures.numbers.six, NULL, &sizeSlot3);
                 break;
                 case 7:
-                SDL_RenderCopy(renderer, seven_txtr, NULL, &sizeSlot3);
+                SDL_RenderCopy(renderer, textures.numbers.seven, NULL, &sizeSlot3);
                 break;
                 case 8:
-                SDL_RenderCopy(renderer, eight_txtr, NULL, &sizeSlot3);
+                SDL_RenderCopy(renderer, textures.numbers.eight, NULL, &sizeSlot3);
                 break;
                 case 9:
-                SDL_RenderCopy(renderer, nine_txtr, NULL, &sizeSlot3);
+                SDL_RenderCopy(renderer, textures.numbers.nine, NULL, &sizeSlot3);
             }
             switch(sizeHundred)
             {
                 case 0:
-                SDL_RenderCopy(renderer, zero_txtr, NULL, &sizeSlot2);
+                SDL_RenderCopy(renderer, textures.numbers.zero, NULL, &sizeSlot2);
                 break;
                 case 1:
-                SDL_RenderCopy(renderer, one_txtr, NULL, &sizeSlot2);
+                SDL_RenderCopy(renderer, textures.numbers.one, NULL, &sizeSlot2);
                 break;
                 case 2:
-                SDL_RenderCopy(renderer, two_txtr, NULL, &sizeSlot2);
+                SDL_RenderCopy(renderer, textures.numbers.two, NULL, &sizeSlot2);
                 break;
                 case 3:
-                SDL_RenderCopy(renderer, three_txtr, NULL, &sizeSlot2);
+                SDL_RenderCopy(renderer, textures.numbers.three, NULL, &sizeSlot2);
                 break;
                 case 4:
-                SDL_RenderCopy(renderer, four_txtr, NULL, &sizeSlot2);
+                SDL_RenderCopy(renderer, textures.numbers.four, NULL, &sizeSlot2);
                 break;
                 case 5:
-                SDL_RenderCopy(renderer, five_txtr, NULL, &sizeSlot2);
+                SDL_RenderCopy(renderer, textures.numbers.five, NULL, &sizeSlot2);
                 break;
                 case 6:
-                SDL_RenderCopy(renderer, six_txtr, NULL, &sizeSlot2);
+                SDL_RenderCopy(renderer, textures.numbers.six, NULL, &sizeSlot2);
                 break;
                 case 7:
-                SDL_RenderCopy(renderer, seven_txtr, NULL, &sizeSlot2);
+                SDL_RenderCopy(renderer, textures.numbers.seven, NULL, &sizeSlot2);
                 break;
                 case 8:
-                SDL_RenderCopy(renderer, eight_txtr, NULL, &sizeSlot2);
+                SDL_RenderCopy(renderer, textures.numbers.eight, NULL, &sizeSlot2);
                 break;
                 case 9:
-                SDL_RenderCopy(renderer, nine_txtr, NULL, &sizeSlot2);
+                SDL_RenderCopy(renderer, textures.numbers.nine, NULL, &sizeSlot2);
             }
             switch(sizeThousand)
             {
                 case 0:
-                SDL_RenderCopy(renderer, zero_txtr, NULL, &sizeSlot1);
+                SDL_RenderCopy(renderer, textures.numbers.zero, NULL, &sizeSlot1);
                 break;
                 case 1:
-                SDL_RenderCopy(renderer, one_txtr, NULL, &sizeSlot1);
+                SDL_RenderCopy(renderer, textures.numbers.one, NULL, &sizeSlot1);
                 break;
                 case 2:
-                SDL_RenderCopy(renderer, two_txtr, NULL, &sizeSlot1);
+                SDL_RenderCopy(renderer, textures.numbers.two, NULL, &sizeSlot1);
                 break;
                 case 3:
-                SDL_RenderCopy(renderer, three_txtr, NULL, &sizeSlot1);
+                SDL_RenderCopy(renderer, textures.numbers.three, NULL, &sizeSlot1);
                 break;
                 case 4:
-                SDL_RenderCopy(renderer, four_txtr, NULL, &sizeSlot1);
+                SDL_RenderCopy(renderer, textures.numbers.four, NULL, &sizeSlot1);
                 break;
                 case 5:
-                SDL_RenderCopy(renderer, five_txtr, NULL, &sizeSlot1);
+                SDL_RenderCopy(renderer, textures.numbers.five, NULL, &sizeSlot1);
                 break;
                 case 6:
-                SDL_RenderCopy(renderer, six_txtr, NULL, &sizeSlot1);
+                SDL_RenderCopy(renderer, textures.numbers.six, NULL, &sizeSlot1);
                 break;
                 case 7:
-                SDL_RenderCopy(renderer, seven_txtr, NULL, &sizeSlot1);
+                SDL_RenderCopy(renderer, textures.numbers.seven, NULL, &sizeSlot1);
                 break;
                 case 8:
-                SDL_RenderCopy(renderer, eight_txtr, NULL, &sizeSlot1);
+                SDL_RenderCopy(renderer, textures.numbers.eight, NULL, &sizeSlot1);
                 break;
                 case 9:
-                SDL_RenderCopy(renderer, nine_txtr, NULL, &sizeSlot1);
+                SDL_RenderCopy(renderer, textures.numbers.nine, NULL, &sizeSlot1);
             }
 
             //Detecta e mostra a interseção do mouse com cada botão e toma conta dos clicks
             if(SDL_IntersectRect(&mouse, &nextOption, &intersection))
             {
-                SDL_SetTextureColorMod(nextButton_txtr, 200, 200, 200);
+                SDL_SetTextureColorMod(textures.buttons.next, 200, 200, 200);
                 if(leftMouseDown)
                 {
                     nextSelected = selectDelay;
@@ -1071,7 +1295,7 @@ int main(int argc, char *argv[])
             }
             else if(SDL_IntersectRect(&mouse, &previousOption, &intersection))
             {
-                SDL_SetTextureColorMod(previousButton_txtr, 200, 200, 200);
+                SDL_SetTextureColorMod(textures.buttons.previous, 200, 200, 200);
                 if(leftMouseDown)
                 {
                     prevSelected = selectDelay;
@@ -1086,7 +1310,7 @@ int main(int argc, char *argv[])
             }
             else if(SDL_IntersectRect(&mouse, &up1, &intersection))
             {
-                SDL_SetTextureColorMod(up1Button_txtr, 200, 200, 200);
+                SDL_SetTextureColorMod(textures.buttons.up.one, 200, 200, 200);
                 if(leftMouseDown)
                 {
                     up1selected = selectDelay;
@@ -1101,7 +1325,7 @@ int main(int argc, char *argv[])
             }
             else if(SDL_IntersectRect(&mouse, &up10, &intersection))
             {
-                SDL_SetTextureColorMod(up10Button_txtr, 200, 200, 200);
+                SDL_SetTextureColorMod(textures.buttons.up.ten, 200, 200, 200);
                 if(leftMouseDown)
                 {
                     up10selected = selectDelay;
@@ -1116,7 +1340,7 @@ int main(int argc, char *argv[])
             }
             else if(SDL_IntersectRect(&mouse, &up100, &intersection))
             {
-                SDL_SetTextureColorMod(up100Button_txtr, 200, 200, 200);
+                SDL_SetTextureColorMod(textures.buttons.up.hundred, 200, 200, 200);
                 if(leftMouseDown)
                 {
                     up100selected = selectDelay;
@@ -1131,7 +1355,7 @@ int main(int argc, char *argv[])
             }
             else if(SDL_IntersectRect(&mouse, &down1, &intersection))
             {
-                SDL_SetTextureColorMod(down1Button_txtr, 200, 200, 200);
+                SDL_SetTextureColorMod(textures.buttons.down.one, 200, 200, 200);
                 if(leftMouseDown)
                 {
                     down1selected = selectDelay;
@@ -1146,7 +1370,7 @@ int main(int argc, char *argv[])
             }
             else if(SDL_IntersectRect(&mouse, &down10, &intersection))
             {
-                SDL_SetTextureColorMod(down10Button_txtr, 200, 200, 200);
+                SDL_SetTextureColorMod(textures.buttons.down.ten, 200, 200, 200);
                 if(leftMouseDown)
                 {
                     down10selected = selectDelay;
@@ -1161,7 +1385,7 @@ int main(int argc, char *argv[])
             }
             else if(SDL_IntersectRect(&mouse, &down100, &intersection))
             {
-                SDL_SetTextureColorMod(down100Button_txtr, 200, 200, 200);
+                SDL_SetTextureColorMod(textures.buttons.down.hundred, 200, 200, 200);
                 if(leftMouseDown)
                 {
                     down100selected = selectDelay;
@@ -1175,7 +1399,7 @@ int main(int argc, char *argv[])
             }
             else if(SDL_IntersectRect(&mouse, &startButton, &intersection))
             {
-                SDL_SetTextureColorMod(start_txtr, 0, 230, 0);
+                SDL_SetTextureColorMod(textures.buttons.start, 0, 230, 0);
                 if(leftMouseDown)
                 {
                     algType = currentOption;
@@ -1188,7 +1412,7 @@ int main(int argc, char *argv[])
                     sorted = false; 
                     temporaryDelay = 0;
                     delay = 0;
-                    tempDelay_txtr = delay_button_txtr;     
+                    textures.buttons.delay.temporary = textures.buttons.delay.off;     
                 }
                 
             }
@@ -1196,55 +1420,55 @@ int main(int argc, char *argv[])
             //Troca a cor dos botões caso haja um click
             if(nextSelected > 0)
             {
-                SDL_SetTextureColorMod(nextButton_txtr, 180, 40, 40);
+                SDL_SetTextureColorMod(textures.buttons.next, 180, 40, 40);
                 nextSelected--;
             }
             if(prevSelected > 0)
             {
-                SDL_SetTextureColorMod(previousButton_txtr, 180, 40, 40);
+                SDL_SetTextureColorMod(textures.buttons.previous, 180, 40, 40);
                 prevSelected--;
             }
             if(up1selected > 0)
             {
-                SDL_SetTextureColorMod(up1Button_txtr, 180, 40, 40);
+                SDL_SetTextureColorMod(textures.buttons.up.one, 180, 40, 40);
                 up1selected--;
             }
             if(up10selected > 0)
             {
-                SDL_SetTextureColorMod(up10Button_txtr, 180, 40, 40);
+                SDL_SetTextureColorMod(textures.buttons.up.ten, 180, 40, 40);
                 up10selected--;
             }
             if(up100selected > 0)
             {
-                SDL_SetTextureColorMod(up100Button_txtr, 180, 40, 40);
+                SDL_SetTextureColorMod(textures.buttons.up.hundred, 180, 40, 40);
                 up100selected--;
             }
             if(down1selected > 0)
             {
-                SDL_SetTextureColorMod(down1Button_txtr, 180, 40, 40);
+                SDL_SetTextureColorMod(textures.buttons.down.one, 180, 40, 40);
                 down1selected--;
             }
             if(down10selected > 0)
             {
-                SDL_SetTextureColorMod(down10Button_txtr, 180, 40, 40);
+                SDL_SetTextureColorMod(textures.buttons.down.ten, 180, 40, 40);
                 down10selected--;
             }
             if(down100selected > 0)
             {
-                SDL_SetTextureColorMod(down100Button_txtr, 180, 40, 40);
+                SDL_SetTextureColorMod(textures.buttons.down.hundred, 180, 40, 40);
                 down100selected--;
             }      
             
-            SDL_RenderCopy(renderer, nextButton_txtr, NULL, &nextOption);
-            SDL_RenderCopy(renderer, previousButton_txtr, NULL, &previousOption);
-            SDL_RenderCopy(renderer, up100Button_txtr, NULL, &up100);
-            SDL_RenderCopy(renderer, up10Button_txtr, NULL, &up10);
-            SDL_RenderCopy(renderer, up1Button_txtr, NULL, &up1);
-            SDL_RenderCopy(renderer, down100Button_txtr, NULL, &down100);
-            SDL_RenderCopy(renderer, down10Button_txtr, NULL, &down10);
-            SDL_RenderCopy(renderer, down1Button_txtr, NULL, &down1);
-            SDL_RenderCopy(renderer, start_txtr, NULL, &startButton);
-            SDL_RenderCopy(renderer, sizeText_txtr, NULL, &sizeTextRect);
+            SDL_RenderCopy(renderer, textures.buttons.next, NULL, &nextOption);
+            SDL_RenderCopy(renderer, textures.buttons.previous, NULL, &previousOption);
+            SDL_RenderCopy(renderer, textures.buttons.up.hundred, NULL, &up100);
+            SDL_RenderCopy(renderer, textures.buttons.up.ten, NULL, &up10);
+            SDL_RenderCopy(renderer, textures.buttons.up.one, NULL, &up1);
+            SDL_RenderCopy(renderer, textures.buttons.down.hundred, NULL, &down100);
+            SDL_RenderCopy(renderer, textures.buttons.down.ten, NULL, &down10);
+            SDL_RenderCopy(renderer, textures.buttons.down.one, NULL, &down1);
+            SDL_RenderCopy(renderer, textures.buttons.start, NULL, &startButton);
+            SDL_RenderCopy(renderer, textures.info.size, NULL, &sizeTextRect);
 
             SDL_RenderPresent(renderer);
 
@@ -1254,9 +1478,9 @@ int main(int argc, char *argv[])
         {
             SDL_SetWindowResizable(window, SDL_FALSE);
 
-            SDL_SetTextureColorMod(startSort_txtr, 255, 255, 255);
-            SDL_SetTextureColorMod(randomize_txtr, 255, 255, 255);
-            SDL_SetTextureColorMod(tempDelay_txtr, 255, 255, 255);
+            SDL_SetTextureColorMod(textures.buttons.sort, 255, 255, 255);
+            SDL_SetTextureColorMod(textures.buttons.randomize, 255, 255, 255);
+            SDL_SetTextureColorMod(textures.buttons.delay.temporary, 255, 255, 255);
 
             if(!shown)
             {
@@ -1267,7 +1491,7 @@ int main(int argc, char *argv[])
             //Habilita/Desabilita o delay
             if(SDL_IntersectRect(&mouse, &delayOption, &intersection))
             {
-                SDL_SetTextureColorMod(tempDelay_txtr, 225, 225, 225);
+                SDL_SetTextureColorMod(textures.buttons.delay.temporary, 225, 225, 225);
                 if(leftMouseDown)
                 {
                     if(!delaySelected)
@@ -1275,14 +1499,14 @@ int main(int argc, char *argv[])
                         std::cout << "Delay habilitado\n";
                         delaySelected = true;
                         temporaryDelay = 5000/size;
-                        tempDelay_txtr = delaySelected_txtr;
+                        textures.buttons.delay.temporary = textures.buttons.delay.on;
                     }
                     else
                     {
                         std::cout << "Delay desabilitado\n";
                         delaySelected = false;
                         temporaryDelay = 0;
-                        tempDelay_txtr = delay_button_txtr;
+                        textures.buttons.delay.temporary = textures.buttons.delay.off;
                     }    
                 }
                 
@@ -1290,54 +1514,72 @@ int main(int argc, char *argv[])
             //Inicia o algorítmo
             else if(SDL_IntersectRect(&mouse, &startSortButton, &intersection))
             {
-                SDL_SetTextureColorMod(startSort_txtr, 225, 225, 225);
+                SDL_SetTextureColorMod(textures.buttons.sort, 225, 225, 225);
                 if(leftMouseDown)
                 {
                     if(!sorted)
                     {
+                        sortStartTime = getTime();
                         delay = temporaryDelay;
                         if(algType == 1)
                         {
-                            bubbleSort(vec, size, renderer, escInfo_txtr, &sortAborted);
+                            bubbleSort(vec, size, renderer, &textures, &sortAborted);
                             sorted = true;
                         }
                         else if(algType == 2)
                         {
-                            selectionSort(vec, size, renderer, escInfo_txtr, &sortAborted);
+                            selectionSort(vec, size, renderer, &textures, &sortAborted);
                             sorted = true;
                         }
                         else if(algType == 3)
                         {
-                            insertionSort(vec, size, renderer, escInfo_txtr, &sortAborted);
+                            insertionSort(vec, size, renderer, &textures, &sortAborted);
                             sorted = true;
                         }
                         else if(algType == 4)
                         {
-                            mergeSort(vec, 0, size - 1, size, renderer, escInfo_txtr, &sortAborted);
+                            mergeSort(vec, 0, size - 1, size, renderer, &textures, &sortAborted);
                             sorted = true;
                         }
                         else if(algType == 5)
                         {
-                            quickSort(vec, 0, size - 1, size, renderer, escInfo_txtr, &sortAborted);
+                            quickSort(vec, 0, size - 1, size, renderer, &textures, &sortAborted);
                             sorted = true;
                         }
                         if(!sortAborted)
                         {
-                            showCompleteVec(vec, size, renderer, escInfo_txtr, &sortAborted);
+                            sortEndTime = getTime();
+                            showCompleteVec(vec, size, renderer, &textures, &sortAborted);
                             sorted = true;
-                        }     
+
+                            sortTotalTime = sortEndTime - sortStartTime;
+                            milisec = 0, sec = 0, min = 0, hour = 0;
+                            milisec = sortTotalTime % 1000;
+                            sec = sortTotalTime / 1000;
+                            min = sec / 60;
+                            sec = sec % 60;
+                            hour = min / 60;
+                            min = min % 60;
+
+                            std::cout << "executado em:\n"
+                            << milisec << " ms\n"
+                            << sec << " s\n"
+                            << min << " min\n"
+                            << hour << " h\n";
+                        }
+                        
                     }    
                 } 
             }
             //Randomiza o vetor
             else if(SDL_IntersectRect(&mouse, &randomizeButton, &intersection))
             {
-                SDL_SetTextureColorMod(randomize_txtr, 225, 225, 225);
+                SDL_SetTextureColorMod(textures.buttons.randomize, 225, 225, 225);
                 if(leftMouseDown)
                 {
                     inicialize(vec, size);
                     randomize(vec, size);
-                    showVec(vec, size, renderer, escInfo_txtr, &sortAborted);
+                    showVec(vec, size, renderer, &textures, &sortAborted);
                     sorted = false;    
                 }
             }
@@ -1388,12 +1630,40 @@ int main(int argc, char *argv[])
                 SDL_RenderFillRect(renderer, &rect);
             }
             SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-            SDL_RenderCopy(renderer, escInfo_txtr, NULL, &quit);
-            SDL_RenderCopy(renderer, tempDelay_txtr, NULL, &delayOption);  
-            SDL_RenderCopy(renderer, randomize_txtr, NULL, &randomizeButton);
+            SDL_RenderCopy(renderer, textures.info.quit, NULL, &quit);
+            SDL_RenderCopy(renderer, textures.buttons.delay.temporary, NULL, &delayOption);  
+            SDL_RenderCopy(renderer, textures.buttons.randomize, NULL, &randomizeButton);
             if(!sorted)
             {
-                SDL_RenderCopy(renderer, startSort_txtr, NULL, &startSortButton); 
+                SDL_RenderCopy(renderer, textures.buttons.sort, NULL, &startSortButton); 
+            }
+            else{
+                timeInfo[0].x = startSortButton.x;
+                timeInfo[0].y = startSortButton.y;
+                for(int i = 1; i < 5; i++){
+                    timeInfo[i] = timeInfo[i - 1];
+                    timeInfo[i].y += timeInfo[i].h;
+                }
+
+                SDL_RenderCopy(renderer, textures.info.time.phrase, NULL, &timeInfo[0]);
+
+                int i = 1;
+                if(hour != 0){
+                    showTime(hour, 1, &timeInfo[i], renderer, &textures);
+                    i++;
+                }
+                if(min != 0){
+                    showTime(min, 2, &timeInfo[i], renderer, &textures);
+                    i++;
+                }
+                if(sec != 0){
+                    showTime(sec, 3, &timeInfo[i], renderer, &textures);
+                    i++;
+                }
+                if(milisec != 0){
+                    showTime(milisec, 4, &timeInfo[i], renderer, &textures);
+                    i++;
+                }  
             }
             SDL_RenderPresent(renderer);
         }
@@ -1406,38 +1676,6 @@ int main(int argc, char *argv[])
     }
 
     SDL_DestroyWindow(window);
-
-    SDL_DestroyTexture(nextButton_txtr);
-    SDL_DestroyTexture(previousButton_txtr);
-    SDL_DestroyTexture(sizeText_txtr);
-    SDL_DestroyTexture(up100Button_txtr);
-    SDL_DestroyTexture(up10Button_txtr);
-    SDL_DestroyTexture(up1Button_txtr);
-    SDL_DestroyTexture(down100Button_txtr);
-    SDL_DestroyTexture(down10Button_txtr);
-    SDL_DestroyTexture(down1Button_txtr);
-    SDL_DestroyTexture(insertionButton_txtr);
-    SDL_DestroyTexture(bubbleButton_txtr);
-    SDL_DestroyTexture(selectionButton_txtr);
-    SDL_DestroyTexture(quickButton_txtr);
-    SDL_DestroyTexture(mergeButton_txtr);
-    SDL_DestroyTexture(zero_txtr);
-    SDL_DestroyTexture(one_txtr);
-    SDL_DestroyTexture(two_txtr);
-    SDL_DestroyTexture(three_txtr);
-    SDL_DestroyTexture(four_txtr);
-    SDL_DestroyTexture(five_txtr);
-    SDL_DestroyTexture(six_txtr);
-    SDL_DestroyTexture(seven_txtr);
-    SDL_DestroyTexture(eight_txtr);
-    SDL_DestroyTexture(nine_txtr);
-    SDL_DestroyTexture(start_txtr);
-    SDL_DestroyTexture(delay_button_txtr);
-    SDL_DestroyTexture(delaySelected_txtr);
-    SDL_DestroyTexture(tempDelay_txtr);
-    SDL_DestroyTexture(escInfo_txtr);
-    SDL_DestroyTexture(startSort_txtr);
-    SDL_DestroyTexture(randomize_txtr);
 
     SDL_DestroyRenderer(renderer);
     
