@@ -1094,10 +1094,10 @@ int main(int argc, char *argv[])
             timeInfo[0].w = 400 * sizeMultiplier;
             timeInfo[0].h = 30 * sizeMultiplier;
 
-            credits.w = 500 * sizeMultiplier;
-            credits.h = 50 * sizeMultiplier;
-            credits.x = 0;
-            credits.y = HEIGHT - credits.h;
+            credits.w = 370 * sizeMultiplier;
+            credits.h = 37 * sizeMultiplier;
+            credits.x = 2 * sizeMultiplier;
+            credits.y = HEIGHT - credits.h - 2 * sizeMultiplier;
 
             lastWIDTH = WIDTH;
             lastHEIGHT = HEIGHT;
