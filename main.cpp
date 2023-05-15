@@ -1054,7 +1054,7 @@ void showTime(int time, int type, SDL_Rect *rect, SDL_Renderer *renderer, progra
     }
 }
 
-uint64_t getTime(){//Pega o tempo passado após 01/01/1970 em milisegundos
+uint64_t getTime(){//Obtém o tempo passado após 01/01/1970 em milisegundos
     using namespace std::chrono;
     return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 }
