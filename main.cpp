@@ -34,6 +34,8 @@ struct size_buttons{
     SDL_Texture *one;
     SDL_Texture *ten;
     SDL_Texture *hundred;
+    SDL_Texture *max;
+    SDL_Texture *min;
 };
 struct delay_button{
     SDL_Texture *on;
@@ -71,8 +73,7 @@ struct all_textures{
 };
 typedef struct all_textures programTxtr;
 
-void load_textures(SDL_Renderer *renderer, programTxtr *textures)
-{
+void load_textures(SDL_Renderer *renderer, programTxtr *textures){//Carrega as texturas do programa
     SDL_Surface *surface = SDL_LoadBMP("./textures/next_button.bmp");
     textures->buttons.next = SDL_CreateTextureFromSurface(renderer, surface);
     SDL_FreeSurface(surface);
@@ -129,6 +130,9 @@ void load_textures(SDL_Renderer *renderer, programTxtr *textures)
     surface = SDL_LoadBMP("./textures/up1_button.bmp");
     textures->buttons.up.one = SDL_CreateTextureFromSurface(renderer, surface);
     SDL_FreeSurface(surface);
+    surface = SDL_LoadBMP("./textures/max_button.bmp");
+    textures->buttons.up.max = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
 
     surface = SDL_LoadBMP("./textures/down100_button.bmp");
     textures->buttons.down.hundred = SDL_CreateTextureFromSurface(renderer, surface);
@@ -138,6 +142,9 @@ void load_textures(SDL_Renderer *renderer, programTxtr *textures)
     SDL_FreeSurface(surface);
     surface = SDL_LoadBMP("./textures/down1_button.bmp");
     textures->buttons.down.one = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+    surface = SDL_LoadBMP("./textures/min_button.bmp");
+    textures->buttons.down.min = SDL_CreateTextureFromSurface(renderer, surface);
     SDL_FreeSurface(surface);
 
     surface = SDL_LoadBMP("./textures/insertion_sort_button.bmp");
@@ -206,6 +213,7 @@ void showVec(int vec[], float vecSize, SDL_Renderer *renderer, programTxtr *text
     float spacing = 25;
     float gap;
 
+    //Calcula o espaçamento entre barras se exixtir
     if(rectWidth >= 3)
     {
         gap = rectWidth * 0.2;
@@ -722,21 +730,191 @@ void mergeSort(int vec[], int start, int end, int vecSize, SDL_Renderer * render
     }
 }
 
-uint64_t getTime(){
-    using namespace std::chrono;
-    return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+//Mostra o tamanho atual do vetor
+void showSize(int size, SDL_Rect *rect, SDL_Renderer *renderer, programTxtr *textures){
+    int aux = size;
+    int thousands, hundreds, tens, ones;
+
+    //Extrai cada número individualmente
+    thousands = aux / 1000;
+    aux -= thousands * 1000;
+    hundreds = aux / 100;
+    aux -= hundreds * 100;
+    tens = aux / 10;
+    aux -= tens * 10;
+    ones = aux;
+
+    SDL_Rect numSlot[4];//Cada um dos rects para mostrar os números do tamanho
+    for(int i = 0; i < 4; i++){
+        numSlot[i].w = 100 * sizeMultiplier;
+        numSlot[i].h = 150 * sizeMultiplier;
+        numSlot[i].y = (*rect).y;
+    }
+
+    //Muda a posiçao dos números dependendo da quantidade de casas decimais
+    if(size > 999){
+        numSlot[0].x = (*rect).x;
+        for(int i = 1; i < 4; i++){
+            numSlot[i].x = numSlot[i - 1].x + numSlot[0].w;
+        }
+    }
+    else if(size > 99){
+        numSlot[2].x = WIDTH/2 - numSlot[0].w/2;
+        numSlot[3].x = numSlot[2].x + numSlot[0].w;
+        numSlot[1].x = numSlot[2].x - numSlot[0].w;
+    }
+    else{
+        numSlot[3].x = WIDTH/2;
+        numSlot[2].x = numSlot[3].x - numSlot[0].w;    
+    }
+    
+    //Checa cada número individualmente e renderiza suas texturas
+    switch(ones)
+    {
+        case 0:
+        SDL_RenderCopy(renderer, textures->numbers.zero, NULL, &numSlot[3]);
+        break;
+        case 1:
+        SDL_RenderCopy(renderer, textures->numbers.one, NULL, &numSlot[3]);
+        break;
+        case 2:
+        SDL_RenderCopy(renderer, textures->numbers.two, NULL, &numSlot[3]);
+        break;
+        case 3:
+        SDL_RenderCopy(renderer, textures->numbers.three, NULL, &numSlot[3]);
+        break;
+        case 4:
+        SDL_RenderCopy(renderer, textures->numbers.four, NULL, &numSlot[3]);
+        break;
+        case 5:
+        SDL_RenderCopy(renderer, textures->numbers.five, NULL, &numSlot[3]);
+        break;
+        case 6:
+        SDL_RenderCopy(renderer, textures->numbers.six, NULL, &numSlot[3]);
+        break;
+        case 7:
+        SDL_RenderCopy(renderer, textures->numbers.seven, NULL, &numSlot[3]);
+        break;
+        case 8:
+        SDL_RenderCopy(renderer, textures->numbers.eight, NULL, &numSlot[3]);
+        break;
+        case 9:
+        SDL_RenderCopy(renderer, textures->numbers.nine, NULL, &numSlot[3]);
+    }
+    switch(tens)
+    {
+        case 0:
+        SDL_RenderCopy(renderer, textures->numbers.zero, NULL, &numSlot[2]);
+        break;
+        case 1:
+        SDL_RenderCopy(renderer, textures->numbers.one, NULL, &numSlot[2]);
+        break;
+        case 2:
+        SDL_RenderCopy(renderer, textures->numbers.two, NULL, &numSlot[2]);
+        break;
+        case 3:
+        SDL_RenderCopy(renderer, textures->numbers.three, NULL, &numSlot[2]);
+        break;
+        case 4:
+        SDL_RenderCopy(renderer, textures->numbers.four, NULL, &numSlot[2]);
+        break;
+        case 5:
+        SDL_RenderCopy(renderer, textures->numbers.five, NULL, &numSlot[2]);
+        break;
+        case 6:
+        SDL_RenderCopy(renderer, textures->numbers.six, NULL, &numSlot[2]);
+        break;
+        case 7:
+        SDL_RenderCopy(renderer, textures->numbers.seven, NULL, &numSlot[2]);
+        break;
+        case 8:
+        SDL_RenderCopy(renderer, textures->numbers.eight, NULL, &numSlot[2]);
+        break;
+        case 9:
+        SDL_RenderCopy(renderer, textures->numbers.nine, NULL, &numSlot[2]);
+    }
+    if(size > 99){
+        switch(hundreds)
+        {
+            case 0:
+            SDL_RenderCopy(renderer, textures->numbers.zero, NULL, &numSlot[1]);
+            break;
+            case 1:
+            SDL_RenderCopy(renderer, textures->numbers.one, NULL, &numSlot[1]);
+            break;
+            case 2:
+            SDL_RenderCopy(renderer, textures->numbers.two, NULL, &numSlot[1]);
+            break;
+            case 3:
+            SDL_RenderCopy(renderer, textures->numbers.three, NULL, &numSlot[1]);
+            break;
+            case 4:
+            SDL_RenderCopy(renderer, textures->numbers.four, NULL, &numSlot[1]);
+            break;
+            case 5:
+            SDL_RenderCopy(renderer, textures->numbers.five, NULL, &numSlot[1]);
+            break;
+            case 6:
+            SDL_RenderCopy(renderer, textures->numbers.six, NULL, &numSlot[1]);
+            break;
+            case 7:
+            SDL_RenderCopy(renderer, textures->numbers.seven, NULL, &numSlot[1]);
+            break;
+            case 8:
+            SDL_RenderCopy(renderer, textures->numbers.eight, NULL, &numSlot[1]);
+            break;
+            case 9:
+            SDL_RenderCopy(renderer, textures->numbers.nine, NULL, &numSlot[1]);
+        }
+    }     
+    if(size > 999){
+        switch(thousands)
+        {
+            case 0:
+            SDL_RenderCopy(renderer, textures->numbers.zero, NULL, &numSlot[0]);
+            break;
+            case 1:
+            SDL_RenderCopy(renderer, textures->numbers.one, NULL, &numSlot[0]);
+            break;
+            case 2:
+            SDL_RenderCopy(renderer, textures->numbers.two, NULL, &numSlot[0]);
+            break;
+            case 3:
+            SDL_RenderCopy(renderer, textures->numbers.three, NULL, &numSlot[0]);
+            break;
+            case 4:
+            SDL_RenderCopy(renderer, textures->numbers.four, NULL, &numSlot[0]);
+            break;
+            case 5:
+            SDL_RenderCopy(renderer, textures->numbers.five, NULL, &numSlot[0]);
+            break;
+            case 6:
+            SDL_RenderCopy(renderer, textures->numbers.six, NULL, &numSlot[0]);
+            break;
+            case 7:
+            SDL_RenderCopy(renderer, textures->numbers.seven, NULL, &numSlot[0]);
+            break;
+            case 8:
+            SDL_RenderCopy(renderer, textures->numbers.eight, NULL, &numSlot[0]);
+            break;
+            case 9:
+            SDL_RenderCopy(renderer, textures->numbers.nine, NULL, &numSlot[0]);
+        }    
+    }
 }
 
+//Mostra o tempo de execução para todas as medidas
 void showTime(int time, int type, SDL_Rect *rect, SDL_Renderer *renderer, programTxtr *textures){
-    int unity, decimal, hundred, aux = time;
+    int ones, tens, hundreds, aux = time;
 
-    hundred = aux / 100;
-    aux -= (hundred * 100);
-    decimal = aux / 10;
-    aux -= (decimal * 10);
-    unity = aux;
+    //Extrai cada número individualmente
+    hundreds = aux / 100;
+    aux -= (hundreds * 100);
+    tens = aux / 10;
+    aux -= (tens * 10);
+    ones = aux;
 
-    SDL_Rect numSlots[3], text;
+    SDL_Rect numSlots[3], text;//Divide o rect principal em "subrects" para renderizar cada número e a medida após
     numSlots[0] = *rect;
     numSlots[0].w = 20 * sizeMultiplier;
     numSlots[1] = numSlots[0];
@@ -747,10 +925,12 @@ void showTime(int time, int type, SDL_Rect *rect, SDL_Renderer *renderer, progra
     text.w = 50 * sizeMultiplier;
     text.h = 30 * sizeMultiplier;
 
+    //Checa as casas decimais, renderiza e atualiza o número da casa a ser utilizada,
+    //caso haja um zero à esquerda, a casa não é atualizada.
     if(time < 1000){
         int i = 0;
-        if(hundred != 0){
-            switch(hundred){
+        if(hundreds != 0){
+            switch(hundreds){
                 case 1:
                 SDL_RenderCopy(renderer, textures->numbers.one, NULL, &numSlots[i]);
                 break;
@@ -780,9 +960,9 @@ void showTime(int time, int type, SDL_Rect *rect, SDL_Renderer *renderer, progra
             }
             i++;
         }
-        switch(decimal){
+        switch(tens){
             case 0:
-            if(hundred == 0){
+            if(hundreds == 0){
                 i--;
             }
             else{
@@ -817,7 +997,7 @@ void showTime(int time, int type, SDL_Rect *rect, SDL_Renderer *renderer, progra
             SDL_RenderCopy(renderer, textures->numbers.nine, NULL, &numSlots[i]);
         }
         i++;
-        switch(unity){
+        switch(ones){
             case 0:
             SDL_RenderCopy(renderer, textures->numbers.zero, NULL, &numSlots[i]);
             break;
@@ -849,10 +1029,11 @@ void showTime(int time, int type, SDL_Rect *rect, SDL_Renderer *renderer, progra
             SDL_RenderCopy(renderer, textures->numbers.nine, NULL, &numSlots[i]);
         }
 
+        //Posiciona a medida após a ultima casa utilizada
         text.x = numSlots[i].x + numSlots[i].w + 5 * sizeMultiplier;
         text.y = numSlots[i].y;
     }
-    else{
+    else{//Mostra "erro" caso o número seja grande demais
         text.x = (*rect).x;
         text.y = (*rect).y;
         SDL_RenderCopy(renderer, textures->info.time.error, NULL, &text);
@@ -873,13 +1054,17 @@ void showTime(int time, int type, SDL_Rect *rect, SDL_Renderer *renderer, progra
     }
 }
 
-int main(int argc, char *argv[])
-{
+uint64_t getTime(){//Pega o tempo passado após 01/01/1970 em milisegundos
+    using namespace std::chrono;
+    return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+}
+
+int main(int argc, char *argv[]){
     SDL_Init(SDL_INIT_EVERYTHING);
 
     SDL_Window *window = SDL_CreateWindow("Sorting Algorithms Visualizer", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, 0);
 
-    if(NULL == window){
+    if(window == NULL){
         std::cout << "Could not create window: "<< SDL_GetError()<< std::endl;
         return 1;
     }
@@ -893,6 +1078,7 @@ int main(int argc, char *argv[])
     SDL_RenderPresent(renderer);
 
     SDL_Event event;
+    //Procedimentos básicos para iniciar um programa usando SDL2
 
     programTxtr textures;
     load_textures(renderer, &textures);
@@ -901,65 +1087,67 @@ int main(int argc, char *argv[])
     const int maxSize = 5000;
     const int minSize = 10;
     float size = 100;
-    //controle do tamanho do vetor
+    //Controle do tamanho do vetor
 
     int vec[maxSize];
 
     int screen = 0, lastScreen = 0;
-    //controle da tela a ser mostrada (menu ou visualizador)
+    //Controle da tela a ser mostrada (menu ou visualizador).
+    //Também identifica o algorítmo utilizado (1 a 5)
 
     int currentOption = 1, temporaryDelay = 0;
-    //controle da seleção dos algorítmos
+    //Controle da seleção dos algorítmos
     
     int lastWIDTH = 0, lastHEIGHT = 0;
-    //usado para checar se o tamanho da tela mudou
+    //Usado para checar se o tamanho da tela mudou
 
     bool leftMouseDown, escDown;
-    //controle de clicks em teclas/mouse
+    //Controle de clicks em teclas/mouse
 
     bool shown, sorted, sortAborted, delaySelected = false;
-    //controle das opções/estado do visualizador
+    //Controle das opções/estado do visualizador
 
-    int up1selected = 0, up10selected = 0, up100selected = 0;
-    int down1selected = 0, down10selected = 0, down100selected = 0;
+    int up1selected = 0, up10selected = 0, up100selected = 0, maxSelected = 0;
+    int down1selected = 0, down10selected = 0, down100selected = 0, minSelected = 0;
     int nextSelected = 0, prevSelected = 0;
-    //controle de clicks nos botões do menu
+    //Controle de clicks nos botões do menu
     const int selectDelay = 4;
-    //quantidade de ciclos que a cor dos botões muda ao serem clicados
+    //Quantidade de ciclos que a cor dos botões muda ao serem clicados
 
     uint64_t sortStartTime, sortEndTime, sortTotalTime;
     int milisec, sec, min, hour;
-    //controle do tempo de execução do algorítmo
+    //Controle do tempo de execução do algorítmo
 
     uint32_t frameStart;
     int frameTime;
     const int FPS = 30, frameDelay = 1000/FPS;
-    //controle da taxa de quadros por segundo (fps)
+    //Controle da taxa de quadros por segundo (fps)
 
     SDL_Rect algorithmOption;
     SDL_Rect nextOption, previousOption;
-    SDL_Rect sizeTextRect;
+    SDL_Rect sizeText;
     SDL_Rect vecSizeOption;
     SDL_Rect sizeSlot1, sizeSlot2, sizeSlot3, sizeSlot4;
     SDL_Rect up1, up10, up100;  
-    SDL_Rect down1, down10, down100;  
+    SDL_Rect down1, down10, down100;
+    SDL_Rect maxButton, minButton; 
     SDL_Rect startButton;
     SDL_Rect credits;
-    //elementos do menu
+    //Elementos do menu
     
     SDL_Rect delayOption;
     SDL_Rect randomizeButton;
     SDL_Rect startSortButton;
     SDL_Rect timeInfo[5];
-    //elementos do visualizador
+    //Elementos do visualizador
 
     SDL_Rect mouse;
     mouse.h = 1;
     mouse.w = 1;
-    //hitbox do mouse
+    //Hitbox do mouse
 
     SDL_Rect intersection;
-    //auxiliar para a detecção de colisões entre o mouse e os botões
+    //Auxiliar para a detecção de colisões entre o mouse e os botões
 
     bool running = true;
 
@@ -1008,7 +1196,7 @@ int main(int argc, char *argv[])
             SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
             SDL_RenderClear(renderer);
             SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-            if(HEIGHT < 900 || WIDTH < 1100)
+            if(HEIGHT < 900 || WIDTH < 1100)//Calcula a proporção da tela para reposicionar os itens;
             { 
                 if(900 - HEIGHT <= 1100 - WIDTH)
                 {
@@ -1057,35 +1245,15 @@ int main(int argc, char *argv[])
             previousOption.x = algorithmOption.x - previousOption.w - 30 * sizeMultiplier;
             previousOption.y = algorithmOption.y + ((algorithmOption.h - previousOption.h)/2);
 
-            sizeTextRect.w = 200 * sizeMultiplier;
-            sizeTextRect.h = 40 * sizeMultiplier;
-            sizeTextRect.y = algorithmOption.y + 250 * sizeMultiplier;
-            sizeTextRect.x = (WIDTH/2) - 100 * sizeMultiplier;
+            sizeText.w = 200 * sizeMultiplier;
+            sizeText.h = 40 * sizeMultiplier;
+            sizeText.y = algorithmOption.y + 250 * sizeMultiplier;
+            sizeText.x = (WIDTH/2) - 100 * sizeMultiplier;
 
             vecSizeOption.h = 150 * sizeMultiplier;
             vecSizeOption.w = 400 * sizeMultiplier;
-            vecSizeOption.y = sizeTextRect.y + 20 * sizeMultiplier;
+            vecSizeOption.y = sizeText.y + 20 * sizeMultiplier;
             vecSizeOption.x = (WIDTH/2) - 200 * sizeMultiplier;
-
-            sizeSlot1.w = 100 * sizeMultiplier;
-            sizeSlot2.w = 100 * sizeMultiplier;
-            sizeSlot3.w = 100 * sizeMultiplier;
-            sizeSlot4.w = 100 * sizeMultiplier;
-
-            sizeSlot1.h = 150 * sizeMultiplier;
-            sizeSlot2.h = 150 * sizeMultiplier;
-            sizeSlot3.h = 150 * sizeMultiplier;
-            sizeSlot4.h = 150 * sizeMultiplier;
-
-            sizeSlot1.x = vecSizeOption.x;
-            sizeSlot2.x = sizeSlot1.x + 100 * sizeMultiplier;
-            sizeSlot3.x = sizeSlot2.x + 100 * sizeMultiplier;
-            sizeSlot4.x = sizeSlot3.x + 100 * sizeMultiplier;
-
-            sizeSlot1.y = vecSizeOption.y;
-            sizeSlot2.y = vecSizeOption.y;
-            sizeSlot3.y = vecSizeOption.y;
-            sizeSlot4.y = vecSizeOption.y;
         
             up100.w = 100 * sizeMultiplier;
             up100.h = 100 * sizeMultiplier;
@@ -1102,6 +1270,11 @@ int main(int argc, char *argv[])
             up1.x = up10.x + up10.w + 20 * sizeMultiplier;
             up1.y = up10.y + ((up10.h - up1.h)/2);
 
+            maxButton.w = 70 * sizeMultiplier;
+            maxButton.h = 35 * sizeMultiplier;
+            maxButton.x = WIDTH/2 + 20 * sizeMultiplier;
+            maxButton.y = vecSizeOption.y + vecSizeOption.h;
+
             down100.w = 100 * sizeMultiplier;
             down100.h = 100 * sizeMultiplier;
             down100.x = vecSizeOption.x - down100.w - 20 * sizeMultiplier;
@@ -1117,10 +1290,15 @@ int main(int argc, char *argv[])
             down1.x = down10.x - down1.w - 20 * sizeMultiplier;
             down1.y = down10.y + ((down10.h - down1.h)/2);
 
+            minButton.w = 70 * sizeMultiplier;
+            minButton.h = 35 * sizeMultiplier;
+            minButton.x = WIDTH/2 - minButton.w - 20 * sizeMultiplier;
+            minButton.y = vecSizeOption.y + vecSizeOption.h;
+
             startButton.w = 250 * sizeMultiplier;
             startButton.h = 150 * sizeMultiplier;
-            startButton.x = (WIDTH/2) - 125 * sizeMultiplier;
-            startButton.y = vecSizeOption.y + 200 * sizeMultiplier;
+            startButton.x = WIDTH/2 - startButton.w/2;
+            startButton.y = vecSizeOption.y + 220 * sizeMultiplier;
             
             timeInfo[0].w = 400 * sizeMultiplier;
             timeInfo[0].h = 30 * sizeMultiplier;
@@ -1142,7 +1320,7 @@ int main(int argc, char *argv[])
             SDL_RenderPresent(renderer);
         }
 
-        if(screen == 0)//menu
+        if(screen == 0)//Menu
         {
             SDL_SetWindowResizable(window, SDL_TRUE);
 
@@ -1150,175 +1328,18 @@ int main(int argc, char *argv[])
             SDL_RenderClear(renderer);
             SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 
+            //Reseta a cor de renderização dos botões para o padrão
             SDL_SetTextureColorMod(textures.buttons.next, 255, 255, 255);
             SDL_SetTextureColorMod(textures.buttons.previous, 255, 255, 255);
             SDL_SetTextureColorMod(textures.buttons.up.hundred, 255, 255, 255);
             SDL_SetTextureColorMod(textures.buttons.up.ten, 255, 255, 255);
             SDL_SetTextureColorMod(textures.buttons.up.one, 255, 255, 255);
+            SDL_SetTextureColorMod(textures.buttons.up.max, 255, 255, 255);
             SDL_SetTextureColorMod(textures.buttons.down.hundred, 255, 255, 255);
             SDL_SetTextureColorMod(textures.buttons.down.ten, 255, 255, 255);
             SDL_SetTextureColorMod(textures.buttons.down.one, 255, 255, 255);
+            SDL_SetTextureColorMod(textures.buttons.down.min, 255, 255, 255);
             SDL_SetTextureColorMod(textures.buttons.start, 255, 255, 255);
-            
-            switch(currentOption)//Mostra o nome de cada algorítmo
-            {
-                case 1:
-                SDL_RenderCopy(renderer, textures.names.bubble, NULL, &algorithmOption);
-                break;
-                case 2:
-                SDL_RenderCopy(renderer, textures.names.selection, NULL, &algorithmOption);
-                break;
-                case 3:
-                SDL_RenderCopy(renderer, textures.names.insertion, NULL, &algorithmOption);
-                break;
-                case 4:
-                SDL_RenderCopy(renderer, textures.names.merge, NULL, &algorithmOption);
-                break;
-                case 5:
-                SDL_RenderCopy(renderer, textures.names.quick, NULL, &algorithmOption);
-                break;//presente para caso haja a implementação de um novo algorítmo
-            }
-
-            int sizeAux = size;
-
-            //Coleta cada algarismo individual do tamanho de vetor selecionado
-            int sizeThousand = sizeAux / 1000;
-            sizeAux -= (sizeThousand * 1000);
-            int sizeHundred = sizeAux / 100;
-            sizeAux -= (sizeHundred * 100);
-            int sizeDecimal = sizeAux / 10;
-            sizeAux -= (sizeDecimal * 10);
-            int sizeUnity = sizeAux;
-
-            //Mostra o tamanho do vetor
-            switch(sizeUnity)
-            {
-                case 0:
-                SDL_RenderCopy(renderer, textures.numbers.zero, NULL, &sizeSlot4);
-                break;
-                case 1:
-                SDL_RenderCopy(renderer, textures.numbers.one, NULL, &sizeSlot4);
-                break;
-                case 2:
-                SDL_RenderCopy(renderer, textures.numbers.two, NULL, &sizeSlot4);
-                break;
-                case 3:
-                SDL_RenderCopy(renderer, textures.numbers.three, NULL, &sizeSlot4);
-                break;
-                case 4:
-                SDL_RenderCopy(renderer, textures.numbers.four, NULL, &sizeSlot4);
-                break;
-                case 5:
-                SDL_RenderCopy(renderer, textures.numbers.five, NULL, &sizeSlot4);
-                break;
-                case 6:
-                SDL_RenderCopy(renderer, textures.numbers.six, NULL, &sizeSlot4);
-                break;
-                case 7:
-                SDL_RenderCopy(renderer, textures.numbers.seven, NULL, &sizeSlot4);
-                break;
-                case 8:
-                SDL_RenderCopy(renderer, textures.numbers.eight, NULL, &sizeSlot4);
-                break;
-                case 9:
-                SDL_RenderCopy(renderer, textures.numbers.nine, NULL, &sizeSlot4);
-            }
-            switch(sizeDecimal)
-            {
-                case 0:
-                SDL_RenderCopy(renderer, textures.numbers.zero, NULL, &sizeSlot3);
-                break;
-                case 1:
-                SDL_RenderCopy(renderer, textures.numbers.one, NULL, &sizeSlot3);
-                break;
-                case 2:
-                SDL_RenderCopy(renderer, textures.numbers.two, NULL, &sizeSlot3);
-                break;
-                case 3:
-                SDL_RenderCopy(renderer, textures.numbers.three, NULL, &sizeSlot3);
-                break;
-                case 4:
-                SDL_RenderCopy(renderer, textures.numbers.four, NULL, &sizeSlot3);
-                break;
-                case 5:
-                SDL_RenderCopy(renderer, textures.numbers.five, NULL, &sizeSlot3);
-                break;
-                case 6:
-                SDL_RenderCopy(renderer, textures.numbers.six, NULL, &sizeSlot3);
-                break;
-                case 7:
-                SDL_RenderCopy(renderer, textures.numbers.seven, NULL, &sizeSlot3);
-                break;
-                case 8:
-                SDL_RenderCopy(renderer, textures.numbers.eight, NULL, &sizeSlot3);
-                break;
-                case 9:
-                SDL_RenderCopy(renderer, textures.numbers.nine, NULL, &sizeSlot3);
-            }
-            switch(sizeHundred)
-            {
-                case 0:
-                SDL_RenderCopy(renderer, textures.numbers.zero, NULL, &sizeSlot2);
-                break;
-                case 1:
-                SDL_RenderCopy(renderer, textures.numbers.one, NULL, &sizeSlot2);
-                break;
-                case 2:
-                SDL_RenderCopy(renderer, textures.numbers.two, NULL, &sizeSlot2);
-                break;
-                case 3:
-                SDL_RenderCopy(renderer, textures.numbers.three, NULL, &sizeSlot2);
-                break;
-                case 4:
-                SDL_RenderCopy(renderer, textures.numbers.four, NULL, &sizeSlot2);
-                break;
-                case 5:
-                SDL_RenderCopy(renderer, textures.numbers.five, NULL, &sizeSlot2);
-                break;
-                case 6:
-                SDL_RenderCopy(renderer, textures.numbers.six, NULL, &sizeSlot2);
-                break;
-                case 7:
-                SDL_RenderCopy(renderer, textures.numbers.seven, NULL, &sizeSlot2);
-                break;
-                case 8:
-                SDL_RenderCopy(renderer, textures.numbers.eight, NULL, &sizeSlot2);
-                break;
-                case 9:
-                SDL_RenderCopy(renderer, textures.numbers.nine, NULL, &sizeSlot2);
-            }
-            switch(sizeThousand)
-            {
-                case 0:
-                SDL_RenderCopy(renderer, textures.numbers.zero, NULL, &sizeSlot1);
-                break;
-                case 1:
-                SDL_RenderCopy(renderer, textures.numbers.one, NULL, &sizeSlot1);
-                break;
-                case 2:
-                SDL_RenderCopy(renderer, textures.numbers.two, NULL, &sizeSlot1);
-                break;
-                case 3:
-                SDL_RenderCopy(renderer, textures.numbers.three, NULL, &sizeSlot1);
-                break;
-                case 4:
-                SDL_RenderCopy(renderer, textures.numbers.four, NULL, &sizeSlot1);
-                break;
-                case 5:
-                SDL_RenderCopy(renderer, textures.numbers.five, NULL, &sizeSlot1);
-                break;
-                case 6:
-                SDL_RenderCopy(renderer, textures.numbers.six, NULL, &sizeSlot1);
-                break;
-                case 7:
-                SDL_RenderCopy(renderer, textures.numbers.seven, NULL, &sizeSlot1);
-                break;
-                case 8:
-                SDL_RenderCopy(renderer, textures.numbers.eight, NULL, &sizeSlot1);
-                break;
-                case 9:
-                SDL_RenderCopy(renderer, textures.numbers.nine, NULL, &sizeSlot1);
-            }
 
             //Detecta e mostra a interseção do mouse com cada botão e toma conta dos clicks
             if(SDL_IntersectRect(&mouse, &nextOption, &intersection))
@@ -1396,6 +1417,17 @@ int main(int argc, char *argv[])
                 }
                 
             }
+            else if(SDL_IntersectRect(&mouse, &maxButton, &intersection))
+            {
+                SDL_SetTextureColorMod(textures.buttons.up.max, 200, 200, 200);
+                if(leftMouseDown)
+                {
+                    maxSelected = selectDelay;
+                    size = maxSize;
+                    std::cout << "Tamanho do vetor: " << size << std::endl;    
+                }
+                
+            }
             else if(SDL_IntersectRect(&mouse, &down1, &intersection))
             {
                 SDL_SetTextureColorMod(textures.buttons.down.one, 200, 200, 200);
@@ -1436,6 +1468,17 @@ int main(int argc, char *argv[])
                     if(size < minSize){
                         size += minSize - size;
                     }
+                    std::cout << "Tamanho do vetor: " << size << std::endl;    
+                }
+                
+            }
+            else if(SDL_IntersectRect(&mouse, &minButton, &intersection))
+            {
+                SDL_SetTextureColorMod(textures.buttons.down.min, 200, 200, 200);
+                if(leftMouseDown)
+                {
+                    minSelected = selectDelay;
+                    size = minSize;
                     std::cout << "Tamanho do vetor: " << size << std::endl;    
                 }
                 
@@ -1486,6 +1529,11 @@ int main(int argc, char *argv[])
                 SDL_SetTextureColorMod(textures.buttons.up.hundred, 180, 40, 40);
                 up100selected--;
             }
+            if(maxSelected > 0)
+            {
+                SDL_SetTextureColorMod(textures.buttons.up.max, 180, 40, 40);
+                maxSelected--;
+            }
             if(down1selected > 0)
             {
                 SDL_SetTextureColorMod(textures.buttons.down.one, 180, 40, 40);
@@ -1500,18 +1548,50 @@ int main(int argc, char *argv[])
             {
                 SDL_SetTextureColorMod(textures.buttons.down.hundred, 180, 40, 40);
                 down100selected--;
-            }      
+            }
+            if(minSelected > 0)
+            {
+                SDL_SetTextureColorMod(textures.buttons.down.min, 180, 40, 40);
+                minSelected--;
+            }
+
+            switch(currentOption)//Mostra o nome de cada algorítmo
+            {
+                case 1:
+                SDL_RenderCopy(renderer, textures.names.bubble, NULL, &algorithmOption);
+                break;
+                case 2:
+                SDL_RenderCopy(renderer, textures.names.selection, NULL, &algorithmOption);
+                break;
+                case 3:
+                SDL_RenderCopy(renderer, textures.names.insertion, NULL, &algorithmOption);
+                break;
+                case 4:
+                SDL_RenderCopy(renderer, textures.names.merge, NULL, &algorithmOption);
+                break;
+                case 5:
+                SDL_RenderCopy(renderer, textures.names.quick, NULL, &algorithmOption);
+                break;//Presente para caso haja a implementação de um novo algorítmo
+            }
+
+            //Renderizando todos os elementos do menu
+            showSize(size, &vecSizeOption, renderer, &textures);  
             
             SDL_RenderCopy(renderer, textures.buttons.next, NULL, &nextOption);
             SDL_RenderCopy(renderer, textures.buttons.previous, NULL, &previousOption);
+
             SDL_RenderCopy(renderer, textures.buttons.up.hundred, NULL, &up100);
             SDL_RenderCopy(renderer, textures.buttons.up.ten, NULL, &up10);
             SDL_RenderCopy(renderer, textures.buttons.up.one, NULL, &up1);
+            SDL_RenderCopy(renderer, textures.buttons.up.max, NULL, &maxButton);
+
             SDL_RenderCopy(renderer, textures.buttons.down.hundred, NULL, &down100);
             SDL_RenderCopy(renderer, textures.buttons.down.ten, NULL, &down10);
             SDL_RenderCopy(renderer, textures.buttons.down.one, NULL, &down1);
+            SDL_RenderCopy(renderer, textures.buttons.down.min, NULL, &minButton);
+
             SDL_RenderCopy(renderer, textures.buttons.start, NULL, &startButton);
-            SDL_RenderCopy(renderer, textures.info.size, NULL, &sizeTextRect);
+            SDL_RenderCopy(renderer, textures.info.size, NULL, &sizeText);
             SDL_RenderCopy(renderer, textures.credits, NULL, &credits);
 
             SDL_RenderPresent(renderer);
@@ -1526,7 +1606,7 @@ int main(int argc, char *argv[])
             SDL_SetTextureColorMod(textures.buttons.randomize, 255, 255, 255);
             SDL_SetTextureColorMod(textures.buttons.delay.temporary, 255, 255, 255);
 
-            if(!shown)
+            if(!shown)//Mostra o vetor pela primeira vez após entrar na tela de visualização
             {
                 inicialize(vec, size);
                 randomize(vec, size);
@@ -1555,11 +1635,12 @@ int main(int argc, char *argv[])
                 }
                 
             }
-            //Inicia o algorítmo
+
+            
             else if(SDL_IntersectRect(&mouse, &startSortButton, &intersection))
             {
                 SDL_SetTextureColorMod(textures.buttons.sort, 225, 225, 225);
-                if(leftMouseDown)
+                if(leftMouseDown)//Inicia o algorítmo
                 {
                     if(!sorted)
                     {
@@ -1598,6 +1679,7 @@ int main(int argc, char *argv[])
 
                             sortTotalTime = sortEndTime - sortStartTime;
                             milisec = 0, sec = 0, min = 0, hour = 0;
+                            //Transforma o tempo total em milisegundos em horas, minutos, segundos e milisegundos
                             milisec = sortTotalTime % 1000;
                             sec = sortTotalTime / 1000;
                             min = sec / 60;
@@ -1634,6 +1716,11 @@ int main(int argc, char *argv[])
                 escDown = sortAborted = false;
             }
             
+            //As próximas linhas utilizam a mesma lógica da função showVec(),
+            //porém a chamda da função faz com que os botões e as medidas não possam
+            //ser renderizadas por conta da falta de parãmetros que seriam necessários (texturas, rects).
+            //Caso os parâmetros fossem adicionados, tais elementos também seriam mostrados durante
+            //a execução, o que não é o objetivo
             SDL_Rect rect, quit;
             quit.w = 500 * sizeMultiplier;
             quit.h = 50 * sizeMultiplier;
@@ -1657,7 +1744,6 @@ int main(int argc, char *argv[])
             SDL_RenderClear(renderer);
             SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 
-            //Renderiza o vetor e as opções
             for(int i = 0; i < size; i++)
             {
                 rect.w = rectWidth - gap * sizeMultiplier;
