@@ -222,11 +222,8 @@ void showVec(int vec[], float vecSize, SDL_Renderer *renderer, programTxtr *text
 
     //Calcula o espaçamento entre barras (se existire)
     //Calculates the gap between the bars (if it exists)
-    if(rectWidth >= 3)
-    {
-        gap = rectWidth * 0.2;
-    }
-    else
+    gap = rectWidth * 0.2;
+    if(gap < 1)
     {
         gap = 0;
     }
@@ -1110,7 +1107,7 @@ int main(int argc, char *argv[]){
     const int maxOption = 5;
     const int maxSize = 5000;
     const int minSize = 10;
-    int size = 100;
+    float size = 100;
     //Controle do tamanho do vetor
     //Control the vector size
 
