@@ -1,5 +1,5 @@
 O projeto utiliza bibliotecas de 64 bits, não funcionará com sistemas ou compiladores de 32 bits.
-Você pode saber como instalar o MingW-64 aqui: https://www.youtube.com/watch?v=Zcy981HhGw0&ab_channel=GhostTogether
+Você pode descobrir como instalar o MingW-64 aqui: https://www.youtube.com/watch?v=Zcy981HhGw0&ab_channel=GhostTogether
 Aqui está um passo a passo para compilar o programa:
 1. Clone ou baixe o repositório e abra na sua IDE de escolha
 2. Abra o terminal e garanta que ele está na localização da pasta do projeto
