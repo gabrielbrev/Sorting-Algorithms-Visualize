@@ -3,7 +3,9 @@
 #include <thread>
 #include "src/include/SDL2/SDL.h"
 
-int WIDTH = 800, HEIGHT = 600;//Dimensões da janela
+int WIDTH = 800, HEIGHT = 600;
+//Dimensões da janela
+//Window dimensions
 
 int delay = 0;
 bool programQuit = false;
