@@ -1108,7 +1108,7 @@ int main(int argc, char *argv[]){
     const int maxSize = 5000;
     const int minSize = 10;
     float size = 100;
-    //Controle do tamanho do vetor
+    //Controle do Vector size
     //Control the vector size
 
     int vec[maxSize];
@@ -1247,14 +1247,14 @@ int main(int argc, char *argv[]){
                 {
                     sizeMultiplier = float(HEIGHT) / 900;
                 }
-                std::cout << "Proporcao: " << sizeMultiplier << std::endl;
+                std::cout << "Proportion: " << sizeMultiplier << std::endl;
             }
             else
             {
                 sizeMultiplier = 1;
             }
 
-            std::cout << "Tamanho da janela: " << WIDTH << " : " << HEIGHT << std::endl; 
+            std::cout << "Window size: " << WIDTH << " : " << HEIGHT << std::endl; 
 
             delayOption.w = 400 * sizeMultiplier;
             delayOption.h = 50 * sizeMultiplier;
@@ -1388,7 +1388,7 @@ int main(int argc, char *argv[]){
                     {
                         currentOption = 1;
                     }
-                    std::cout << "Numero da opcao: " << currentOption << std::endl;                        
+                    std::cout << "Option number: " << currentOption << std::endl;                        
                 }
 
             }
@@ -1403,7 +1403,7 @@ int main(int argc, char *argv[]){
                     {
                         currentOption = maxOption;
                     }
-                    std::cout << "Numero da opcao: " << currentOption << std::endl;                        
+                    std::cout << "Option number: " << currentOption << std::endl;                        
                 }
 
             }
@@ -1418,7 +1418,7 @@ int main(int argc, char *argv[]){
                     {
                         size -= size - maxSize;
                     }
-                    std::cout << "Tamanho do vetor: " << size << std::endl;    
+                    std::cout << "Vector size: " << size << std::endl;    
                 }
                 
             }
@@ -1433,7 +1433,7 @@ int main(int argc, char *argv[]){
                     {
                         size -= size - maxSize;
                     }
-                    std::cout << "Tamanho do vetor: " << size << std::endl;    
+                    std::cout << "Vector size: " << size << std::endl;    
                 }
                 
             }
@@ -1448,7 +1448,7 @@ int main(int argc, char *argv[]){
                     {
                         size -= size - maxSize;
                     }
-                    std::cout << "Tamanho do vetor: " << size << std::endl;    
+                    std::cout << "Vector size: " << size << std::endl;    
                 }
                 
             }
@@ -1459,7 +1459,7 @@ int main(int argc, char *argv[]){
                 {
                     maxSelected = selectDelay;
                     size = maxSize;
-                    std::cout << "Tamanho do vetor: " << size << std::endl;    
+                    std::cout << "Vector size: " << size << std::endl;    
                 }
                 
             }
@@ -1474,7 +1474,7 @@ int main(int argc, char *argv[]){
                     {
                         size += minSize - size;
                     }
-                    std::cout << "Tamanho do vetor: " << size << std::endl;                        
+                    std::cout << "Vector size: " << size << std::endl;                        
                 }
 
             }
@@ -1489,7 +1489,7 @@ int main(int argc, char *argv[]){
                     {
                         size += minSize - size;
                     }
-                    std::cout << "Tamanho do vetor: " << size << std::endl;    
+                    std::cout << "Vector size: " << size << std::endl;    
                 }
                 
             }
@@ -1503,7 +1503,7 @@ int main(int argc, char *argv[]){
                     if(size < minSize){
                         size += minSize - size;
                     }
-                    std::cout << "Tamanho do vetor: " << size << std::endl;    
+                    std::cout << "Vector size: " << size << std::endl;    
                 }
                 
             }
@@ -1514,7 +1514,7 @@ int main(int argc, char *argv[]){
                 {
                     minSelected = selectDelay;
                     size = minSize;
-                    std::cout << "Tamanho do vetor: " << size << std::endl;    
+                    std::cout << "Vector size: " << size << std::endl;    
                 }
                 
             }
@@ -1524,7 +1524,7 @@ int main(int argc, char *argv[]){
                 if(leftMouseDown)
                 {
                     screen = currentOption;
-                    std::cout << "Opcao: " << currentOption << "\nTamanho: " << size << std::endl;
+                    std::cout << "Option: " << currentOption << "\nSize: " << size << std::endl;
                     inicialize(vec, size);
                     randomize(vec, size);
                     shown = false;
@@ -1661,14 +1661,14 @@ int main(int argc, char *argv[]){
                 {
                     if(!delaySelected)
                     {
-                        std::cout << "Delay habilitado\n";
+                        std::cout << "Delay on\n";
                         delaySelected = true;
                         temporaryDelay = 5000/size;
                         textures.buttons.delay.temporary = textures.buttons.delay.on;
                     }
                     else
                     {
-                        std::cout << "Delay desabilitado\n";
+                        std::cout << "Delay off\n";
                         delaySelected = false;
                         temporaryDelay = 0;
                         textures.buttons.delay.temporary = textures.buttons.delay.off;
@@ -1731,7 +1731,7 @@ int main(int argc, char *argv[]){
                             hour = min / 60;
                             min = min % 60;
 
-                            std::cout << "Executado em:\n"
+                            std::cout << "Executed in:\n"
                             << milisec << " ms\n"
                             << sec << " s\n"
                             << min << " min\n"
