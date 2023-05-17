@@ -9,6 +9,7 @@ Aqui está um passo a passo para compilar o programa:
     g++ -std=c++11 -Wall -O0 -g -I src/include -L src/lib -o main main.cpp -lmingw32 -lSDL2main -lSDL2
 5. Após isso, será gerado um executável na pasta do projeto, você pode executá-lo normalmente ou utilizar o comando ./main
 6. Espero que goste!
+O programa pode ser compilado em qualquer sistema operacional, porém a linha de comando disponibilizada e utilizada na makefile funciona somente em sistemas Windows (e talvez Linux)
 
 The project uses 64-bit libraries, it will not work with 32-bit compilers/systems.
 You can find how to install MingW-64 here: https://www.youtube.com/watch?v=Zcy981HhGw0&ab_channel=GhostTogether
@@ -21,3 +22,4 @@ Here is a guide to compile the program:
     g++ -std=c++11 -Wall -O0 -g -I src/include -L src/lib -o main main.cpp -lmingw32 -lSDL2main -lSDL2
 5. After that, an executable will be generated in the project's folder, you can execute it normally or use the command ./main
 6. I hope you enjoy!
+The program can be compiled in any operational system, but the command line given and used in the makefile only works for Windows (and maybe Linux)
