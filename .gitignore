@@ -1,2 +1,6 @@
 # ignore the local generated .exe file
 *.exe
+# ignore the .gitignore file
+*.gitionore
+# ignore the .vscode file
+*.vscode
