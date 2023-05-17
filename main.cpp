@@ -284,11 +284,8 @@ void showCompleteVec(int vec[], int vecSize, SDL_Renderer *renderer, programTxtr
     int complete = 1;  
     int tempDelay;
 
-    if(rectWidth >= 3)
-    {
-        gap = rectWidth * 0.2;
-    }
-    else
+    gap = rectWidth * 0.2;
+    if(gap < 1)
     {
         gap = 0;
     }
@@ -1780,11 +1777,8 @@ int main(int argc, char *argv[]){
             float spacing = 25;
             float gap;
 
-            if(rectWidth >= 3)
-            {
-                gap = rectWidth * 0.2;
-            }
-            else
+            gap = rectWidth * 0.2;
+            if(gap < 1)
             {
                 gap = 0;
             }
