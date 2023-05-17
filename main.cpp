@@ -3,12 +3,14 @@
 #include <thread>
 #include "src/include/SDL2/SDL.h"
 
-int WIDTH = 800, HEIGHT = 600;
+int WIDTH = 800, HEIGHT = 600;//Dimensões da janela
 
 int delay = 0;
 bool programQuit = false;
 
 float sizeMultiplier = 1;
+//Toma conta da proporção dos elementos
+//Handles the elements’ proportion
 
 struct time{
     SDL_Texture *phrase;
@@ -73,7 +75,9 @@ struct all_textures{
 };
 typedef struct all_textures programTxtr;
 
-void load_textures(SDL_Renderer *renderer, programTxtr *textures){//Carrega as texturas do programa
+//Carrega as texturas do programa
+//Loads the program textures
+void load_textures(SDL_Renderer *renderer, programTxtr *textures){
     SDL_Surface *surface = SDL_LoadBMP("./textures/next_button.bmp");
     textures->buttons.next = SDL_CreateTextureFromSurface(renderer, surface);
     SDL_FreeSurface(surface);
@@ -199,7 +203,8 @@ void load_textures(SDL_Renderer *renderer, programTxtr *textures){//Carrega as t
     SDL_FreeSurface(surface);
 }
 
-//Mostra os valores do vetor na tela
+//Mostra os valores do vetor em forma de barras na tela
+//Shows the vector’s values as bars on the screen
 void showVec(int vec[], float vecSize, SDL_Renderer *renderer, programTxtr *textures, bool *abort, int cmp1 = -1, int cmp2 = -1, int base = -1)
 {
     SDL_Rect rect, quit;
@@ -213,7 +218,8 @@ void showVec(int vec[], float vecSize, SDL_Renderer *renderer, programTxtr *text
     float spacing = 25;
     float gap;
 
-    //Calcula o espaçamento entre barras se exixtir
+    //Calcula o espaçamento entre barras (se existire)
+    //Calculates the gap between the bars (if it exists)
     if(rectWidth >= 3)
     {
         gap = rectWidth * 0.2;
@@ -227,7 +233,8 @@ void showVec(int vec[], float vecSize, SDL_Renderer *renderer, programTxtr *text
     SDL_RenderClear(renderer);
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 
-    //Calcula e mostra a posição e tamanho de cada barra (valor)
+    //Define a posição e tamanho e define a cor de cada barra
+    //Calculates the size and position and sets color of each bar
     for(int i = 0; i < size; i++)
     {
         rect.w = rectWidth - gap * sizeMultiplier;
@@ -259,7 +266,8 @@ void showVec(int vec[], float vecSize, SDL_Renderer *renderer, programTxtr *text
     SDL_Delay(delay);
 }
 
-//Completa as barras com a cor verde gradativamente
+//Completa as barras com a cor verde gradativamente, utiliza a mesma logica da função showVec() em sua maior parte
+//Colors the bars green gradually, uses mostly the same logic used in the showVec() function
 void showCompleteVec(int vec[], int vecSize, SDL_Renderer *renderer, programTxtr *textures, bool *abort)
 {
     SDL_Event event;
@@ -338,7 +346,7 @@ void showCompleteVec(int vec[], int vecSize, SDL_Renderer *renderer, programTxtr
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
         SDL_RenderCopy(renderer, textures->info.quit, NULL, &quit);
         SDL_RenderPresent(renderer);
-        if(size < 2000)
+        if(size < 500)
         {
             tempDelay = 250/size;
             SDL_Delay(tempDelay);
@@ -347,6 +355,7 @@ void showCompleteVec(int vec[], int vecSize, SDL_Renderer *renderer, programTxtr
 }
 
 //Zera os valores do vetor
+//Sets all the vector values to zero
 void inicialize(int vec[], int vecSize)
 {
     for(int i = 0; i < vecSize; i++)
@@ -356,6 +365,7 @@ void inicialize(int vec[], int vecSize)
 }
 
 //Aleatoriza os valores do vetor de acordo com seu tamanho
+//Randomizes the vector values according to the defined size
 void randomize(int vec[], int vecSize)
 {
     int num;
@@ -712,7 +722,6 @@ void intercalate(int vec[], int start, int end, int mid, int vecSize, SDL_Render
             }
         }        
     }
-
 }
 
 void mergeSort(int vec[], int start, int end, int vecSize, SDL_Renderer * renderer, programTxtr *textures, bool *abort){
@@ -731,11 +740,13 @@ void mergeSort(int vec[], int start, int end, int vecSize, SDL_Renderer * render
 }
 
 //Mostra o tamanho atual do vetor
+//Displays the current vector size
 void showSize(int size, SDL_Rect *rect, SDL_Renderer *renderer, programTxtr *textures){
     int aux = size;
     int thousands, hundreds, tens, ones;
 
-    //Extrai cada número individualmente
+    //Obtém cada dígito separadamente do tamanho definido
+    //Gets each digit separately from the defined size
     thousands = aux / 1000;
     aux -= thousands * 1000;
     hundreds = aux / 100;
@@ -752,6 +763,7 @@ void showSize(int size, SDL_Rect *rect, SDL_Renderer *renderer, programTxtr *tex
     }
 
     //Muda a posiçao dos números dependendo da quantidade de casas decimais
+    //Changes the position of the digit slots depending on how many digits there are
     if(size > 999){
         numSlot[0].x = (*rect).x;
         for(int i = 1; i < 4; i++){
@@ -768,7 +780,8 @@ void showSize(int size, SDL_Rect *rect, SDL_Renderer *renderer, programTxtr *tex
         numSlot[2].x = numSlot[3].x - numSlot[0].w;    
     }
     
-    //Checa cada número individualmente e renderiza suas texturas
+    //Checa cada número individualmente e aplica suas respectivas texturas
+    //Checks each digit and applies their respective texture
     switch(ones)
     {
         case 0:
@@ -903,11 +916,13 @@ void showSize(int size, SDL_Rect *rect, SDL_Renderer *renderer, programTxtr *tex
     }
 }
 
-//Mostra o tempo de execução para todas as medidas
+//Define como será mostrada cada medida do tempo de execução
+//Sets how each metric for the execution time will be shown
 void showTime(int time, int type, SDL_Rect *rect, SDL_Renderer *renderer, programTxtr *textures){
     int ones, tens, hundreds, aux = time;
 
-    //Extrai cada número individualmente
+    //Obtém cada dígito separadamente do tempo passado como parâmetro
+    //Gets each digit separately from the time passed as parameter 
     hundreds = aux / 100;
     aux -= (hundreds * 100);
     tens = aux / 10;
@@ -925,8 +940,10 @@ void showTime(int time, int type, SDL_Rect *rect, SDL_Renderer *renderer, progra
     text.w = 50 * sizeMultiplier;
     text.h = 30 * sizeMultiplier;
 
-    //Checa as casas decimais, renderiza e atualiza o número da casa a ser utilizada,
-    //caso haja um zero à esquerda, a casa não é atualizada.
+    //Checa cada digito, aplica sua devida textura e incrementa o índice de numSlot[].
+    //Caso o dígito seja um zero à esquerda, o índice não será atualizado
+    //Checks each digit, applies it’s respective texture and increments numSlot[]’s index.
+    //If the digit is a zero to the left, the index is not incremented
     if(time < 1000){
         int i = 0;
         if(hundreds != 0){
@@ -1033,7 +1050,9 @@ void showTime(int time, int type, SDL_Rect *rect, SDL_Renderer *renderer, progra
         text.x = numSlots[i].x + numSlots[i].w + 5 * sizeMultiplier;
         text.y = numSlots[i].y;
     }
-    else{//Mostra "erro" caso o número seja grande demais
+    else{
+    //Mostra "erro" caso o número seja grande demais
+    //Renders “erro” if the number is too big
         text.x = (*rect).x;
         text.y = (*rect).y;
         SDL_RenderCopy(renderer, textures->info.time.error, NULL, &text);
@@ -1054,7 +1073,9 @@ void showTime(int time, int type, SDL_Rect *rect, SDL_Renderer *renderer, progra
     }
 }
 
-uint64_t getTime(){//Pega o tempo passado após 01/01/1970 em milisegundos
+uint64_t getTime(){
+//Pega o tempo passado após 01/01/1970 em milisegundos
+//Gets the time passed since 01/01/1970 in miliseconds
     using namespace std::chrono;
     return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 }
@@ -1078,7 +1099,8 @@ int main(int argc, char *argv[]){
     SDL_RenderPresent(renderer);
 
     SDL_Event event;
-    //Procedimentos básicos para iniciar um programa usando SDL2
+    //Procedimento básico para iniciar um programa usando SDL2
+    //Basic procedure for inicializing a program using SDL2
 
     programTxtr textures;
     load_textures(renderer, &textures);
@@ -1086,72 +1108,88 @@ int main(int argc, char *argv[]){
     const int maxOption = 5;
     const int maxSize = 5000;
     const int minSize = 10;
-    float size = 100;
+    int size = 100;
     //Controle do tamanho do vetor
+    //Control the vector size
 
     int vec[maxSize];
 
-    int screen = 0, lastScreen = 0;
+    int screen = 0;
     //Controle da tela a ser mostrada (menu ou visualizador).
-    //Também identifica o algorítmo utilizado (1 a 5)
+    //Também identifica o algorítmo usado (1 a 5)
+    //Controls wich screen is being shown (menu or visualizer)
+    //Also identifies the used algorithm (1 to 5)
 
     int currentOption = 1, temporaryDelay = 0;
     //Controle da seleção dos algorítmos
+    //Control the algorithm selection
     
     int lastWIDTH = 0, lastHEIGHT = 0;
     //Usado para checar se o tamanho da tela mudou
+    //Used to check if the window size has changed
 
     bool leftMouseDown, escDown;
     //Controle de clicks em teclas/mouse
+    //Control clicks/key presses
 
     bool shown, sorted, sortAborted, delaySelected = false;
-    //Controle das opções/estado do visualizador
+    //Controle das opções e do estado do visualizador
+    //Control the options and state of the visualizer 
 
     int up1selected = 0, up10selected = 0, up100selected = 0, maxSelected = 0;
     int down1selected = 0, down10selected = 0, down100selected = 0, minSelected = 0;
     int nextSelected = 0, prevSelected = 0;
     //Controle de clicks nos botões do menu
+    //Control button clicks on the menu
     const int selectDelay = 4;
-    //Quantidade de ciclos que a cor dos botões muda ao serem clicados
+    //Número de ciclos que botões pressionados tem a cor diferente
+    //Number of cycles that pressed buttons have a different color
+   
 
     uint64_t sortStartTime, sortEndTime, sortTotalTime;
     int milisec, sec, min, hour;
-    //Controle do tempo de execução do algorítmo
+    //Guardam do tempo de execução do algorítmo
+    //Store the algorithm’s execution time
 
     uint32_t frameStart;
     int frameTime;
     const int FPS = 30, frameDelay = 1000/FPS;
     //Controle da taxa de quadros por segundo (fps)
+    //Control the frame rate (fps)
 
     SDL_Rect algorithmOption;
     SDL_Rect nextOption, previousOption;
     SDL_Rect sizeText;
-    SDL_Rect vecSizeOption;
-    SDL_Rect sizeSlot1, sizeSlot2, sizeSlot3, sizeSlot4;
+    SDL_Rect vecSizeDisplay;
     SDL_Rect up1, up10, up100;  
     SDL_Rect down1, down10, down100;
     SDL_Rect maxButton, minButton; 
     SDL_Rect startButton;
     SDL_Rect credits;
     //Elementos do menu
+    //Menu elements
     
     SDL_Rect delayOption;
     SDL_Rect randomizeButton;
     SDL_Rect startSortButton;
     SDL_Rect timeInfo[5];
     //Elementos do visualizador
+    //Visualizer elements
 
     SDL_Rect mouse;
     mouse.h = 1;
     mouse.w = 1;
-    //Hitbox do mouse
+    //Hitbox do cursor
+    //Cursor’s hitbox
 
     SDL_Rect intersection;
-    //Auxiliar para a detecção de colisões entre o mouse e os botões
+    //Auxiliar para a detecção de colisões entre o cursor e os botões
+    //Auxiliar for collision detection between the cursor and buttons 
 
     bool running = true;
-
-    while(running)//Início do programa
+    //Início do ciclo
+    //Cycle start
+    while(running)
     {
         frameStart = SDL_GetTicks();
 
@@ -1162,7 +1200,9 @@ int main(int argc, char *argv[]){
         leftMouseDown = false;
         escDown = false;
 
-        if(SDL_PollEvent(&event))//Toma conta das interações do usuário (clicks, teclas, ...)
+        //Toma conta das interações do usuário (clicks, teclas, ...)
+        //Handles user interaction (clicks, keys, ...)
+        if(SDL_PollEvent(&event))
         {
             if(SDL_QUIT == event.type)
             {
@@ -1185,18 +1225,20 @@ int main(int argc, char *argv[]){
                 {
                     escDown = true;
                 }
-            }
-            
+            }            
         }
 
         SDL_GetWindowSize(window, &WIDTH, &HEIGHT);
-        //Atualiza a posição de cada item do menu de acordo com o tamanho da janela
+        //Atualiza a posição e tamanho de cada elemento de acordo com o tamanho da janela
+        //Updates each element’s size and position acorrding to the window size
         if(lastHEIGHT != HEIGHT || lastWIDTH != WIDTH)
         {
             SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
             SDL_RenderClear(renderer);
             SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-            if(HEIGHT < 900 || WIDTH < 1100)//Calcula a proporção da tela para reposicionar os itens;
+            //Calcula a proporção da tela para reposicionar e redimensionar os elementos
+            //Calculates screen the proportion to reposition and resize the elements
+            if(HEIGHT < 900 || WIDTH < 1100)
             { 
                 if(900 - HEIGHT <= 1100 - WIDTH)
                 {
@@ -1250,15 +1292,15 @@ int main(int argc, char *argv[]){
             sizeText.y = algorithmOption.y + 250 * sizeMultiplier;
             sizeText.x = (WIDTH/2) - 100 * sizeMultiplier;
 
-            vecSizeOption.h = 150 * sizeMultiplier;
-            vecSizeOption.w = 400 * sizeMultiplier;
-            vecSizeOption.y = sizeText.y + 20 * sizeMultiplier;
-            vecSizeOption.x = (WIDTH/2) - 200 * sizeMultiplier;
+            vecSizeDisplay.h = 150 * sizeMultiplier;
+            vecSizeDisplay.w = 400 * sizeMultiplier;
+            vecSizeDisplay.y = sizeText.y + 20 * sizeMultiplier;
+            vecSizeDisplay.x = (WIDTH/2) - 200 * sizeMultiplier;
         
             up100.w = 100 * sizeMultiplier;
             up100.h = 100 * sizeMultiplier;
-            up100.x = vecSizeOption.x + vecSizeOption.w + 20 * sizeMultiplier;
-            up100.y = vecSizeOption.y + ((vecSizeOption.h - up100.h)/2);
+            up100.x = vecSizeDisplay.x + vecSizeDisplay.w + 20 * sizeMultiplier;
+            up100.y = vecSizeDisplay.y + ((vecSizeDisplay.h - up100.h)/2);
 
             up10.w = 80 * sizeMultiplier;
             up10.h = 80 * sizeMultiplier;
@@ -1273,12 +1315,12 @@ int main(int argc, char *argv[]){
             maxButton.w = 70 * sizeMultiplier;
             maxButton.h = 35 * sizeMultiplier;
             maxButton.x = WIDTH/2 + 20 * sizeMultiplier;
-            maxButton.y = vecSizeOption.y + vecSizeOption.h;
+            maxButton.y = vecSizeDisplay.y + vecSizeDisplay.h;
 
             down100.w = 100 * sizeMultiplier;
             down100.h = 100 * sizeMultiplier;
-            down100.x = vecSizeOption.x - down100.w - 20 * sizeMultiplier;
-            down100.y = vecSizeOption.y + ((vecSizeOption.h - down100.h)/2);
+            down100.x = vecSizeDisplay.x - down100.w - 20 * sizeMultiplier;
+            down100.y = vecSizeDisplay.y + ((vecSizeDisplay.h - down100.h)/2);
 
             down10.w = 80 * sizeMultiplier;
             down10.h = 80 * sizeMultiplier;
@@ -1293,12 +1335,12 @@ int main(int argc, char *argv[]){
             minButton.w = 70 * sizeMultiplier;
             minButton.h = 35 * sizeMultiplier;
             minButton.x = WIDTH/2 - minButton.w - 20 * sizeMultiplier;
-            minButton.y = vecSizeOption.y + vecSizeOption.h;
+            minButton.y = vecSizeDisplay.y + vecSizeDisplay.h;
 
             startButton.w = 250 * sizeMultiplier;
             startButton.h = 150 * sizeMultiplier;
             startButton.x = WIDTH/2 - startButton.w/2;
-            startButton.y = vecSizeOption.y + 220 * sizeMultiplier;
+            startButton.y = vecSizeDisplay.y + 220 * sizeMultiplier;
             
             timeInfo[0].w = 400 * sizeMultiplier;
             timeInfo[0].h = 30 * sizeMultiplier;
@@ -1311,14 +1353,6 @@ int main(int argc, char *argv[]){
             lastWIDTH = WIDTH;
             lastHEIGHT = HEIGHT;
         }
-        
-        if(lastScreen != screen)//Limpa a tela caso haja uma troca de interface (do menu para o visualizador e vice-versa)
-        {
-            lastScreen = screen;
-            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-            SDL_RenderClear(renderer);
-            SDL_RenderPresent(renderer);
-        }
 
         if(screen == 0)//Menu
         {
@@ -1328,7 +1362,8 @@ int main(int argc, char *argv[]){
             SDL_RenderClear(renderer);
             SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 
-            //Reseta a cor de renderização dos botões para o padrão
+            //Reseta a cor de renderização de cada textura para o padrão
+            //Resets each texture’s rendering color to default 
             SDL_SetTextureColorMod(textures.buttons.next, 255, 255, 255);
             SDL_SetTextureColorMod(textures.buttons.previous, 255, 255, 255);
             SDL_SetTextureColorMod(textures.buttons.up.hundred, 255, 255, 255);
@@ -1341,7 +1376,8 @@ int main(int argc, char *argv[]){
             SDL_SetTextureColorMod(textures.buttons.down.min, 255, 255, 255);
             SDL_SetTextureColorMod(textures.buttons.start, 255, 255, 255);
 
-            //Detecta e mostra a interseção do mouse com cada botão e toma conta dos clicks
+            //Detecta e mostra a interseção do cursor com cada botão e toma conta do que acontece quando há um click
+            //Detects and displays the intersection between the cursor and a button and handles what happens when there is a click
             if(SDL_IntersectRect(&mouse, &nextOption, &intersection))
             {
                 SDL_SetTextureColorMod(textures.buttons.next, 200, 200, 200);
@@ -1504,6 +1540,7 @@ int main(int argc, char *argv[]){
             }
 
             //Troca a cor dos botões caso haja um click
+            //Changes the button colors in case a click happend
             if(nextSelected > 0)
             {
                 SDL_SetTextureColorMod(textures.buttons.next, 180, 40, 40);
@@ -1554,8 +1591,9 @@ int main(int argc, char *argv[]){
                 SDL_SetTextureColorMod(textures.buttons.down.min, 180, 40, 40);
                 minSelected--;
             }
-
-            switch(currentOption)//Mostra o nome de cada algorítmo
+            //Mostra o nome de cada algorítmo
+            //Displays each algorithm’s name
+            switch(currentOption)
             {
                 case 1:
                 SDL_RenderCopy(renderer, textures.names.bubble, NULL, &algorithmOption);
@@ -1575,7 +1613,8 @@ int main(int argc, char *argv[]){
             }
 
             //Renderizando todos os elementos do menu
-            showSize(size, &vecSizeOption, renderer, &textures);  
+            //Rendering all the menu elements
+            showSize(size, &vecSizeDisplay, renderer, &textures);  
             
             SDL_RenderCopy(renderer, textures.buttons.next, NULL, &nextOption);
             SDL_RenderCopy(renderer, textures.buttons.previous, NULL, &previousOption);
@@ -1598,21 +1637,24 @@ int main(int argc, char *argv[]){
 
         }
 
-        else//Visualizador de algorítmos
+        else//Visualizer
         {
             SDL_SetWindowResizable(window, SDL_FALSE);
 
             SDL_SetTextureColorMod(textures.buttons.sort, 255, 255, 255);
             SDL_SetTextureColorMod(textures.buttons.randomize, 255, 255, 255);
             SDL_SetTextureColorMod(textures.buttons.delay.temporary, 255, 255, 255);
-
-            if(!shown)//Mostra o vetor pela primeira vez após entrar na tela de visualização
+            
+            //Renderiza o vetor pela primeira vez após entrar na tela de visualização
+            //Renders the bars for the first time after entering the visualizer screen
+            if(!shown)
             {
                 inicialize(vec, size);
                 randomize(vec, size);
                 shown = true;
             }
             //Habilita/Desabilita o delay
+            //Turns the delay on and off
             if(SDL_IntersectRect(&mouse, &delayOption, &intersection))
             {
                 SDL_SetTextureColorMod(textures.buttons.delay.temporary, 225, 225, 225);
@@ -1640,7 +1682,9 @@ int main(int argc, char *argv[]){
             else if(SDL_IntersectRect(&mouse, &startSortButton, &intersection))
             {
                 SDL_SetTextureColorMod(textures.buttons.sort, 225, 225, 225);
-                if(leftMouseDown)//Inicia o algorítmo
+                //Inicia o algorítmo
+                //Starts the algorithm
+                if(leftMouseDown)
                 {
                     if(!sorted)
                     {
@@ -1679,7 +1723,8 @@ int main(int argc, char *argv[]){
 
                             sortTotalTime = sortEndTime - sortStartTime;
                             milisec = 0, sec = 0, min = 0, hour = 0;
-                            //Transforma o tempo total em milisegundos em horas, minutos, segundos e milisegundos
+                            //Converte o tempo total de milisegundos para horas, minutos, segundos e milisegundos
+                            //Converts the total execution time from miliseconds to hours, minutes, seconds and milisecods
                             milisec = sortTotalTime % 1000;
                             sec = sortTotalTime / 1000;
                             min = sec / 60;
@@ -1687,7 +1732,7 @@ int main(int argc, char *argv[]){
                             hour = min / 60;
                             min = min % 60;
 
-                            std::cout << "executado em:\n"
+                            std::cout << "Executado em:\n"
                             << milisec << " ms\n"
                             << sec << " s\n"
                             << min << " min\n"
@@ -1698,6 +1743,7 @@ int main(int argc, char *argv[]){
                 } 
             }
             //Randomiza o vetor
+            //Randomizes the vector
             else if(SDL_IntersectRect(&mouse, &randomizeButton, &intersection))
             {
                 SDL_SetTextureColorMod(textures.buttons.randomize, 225, 225, 225);
@@ -1709,18 +1755,22 @@ int main(int argc, char *argv[]){
                     sorted = false;    
                 }
             }
-            //Retorna para o menu
+            //Volta para o menu
+            //Goes back to the menu
             else if(escDown || sortAborted)
             {
                 screen = 0;
                 escDown = sortAborted = false;
             }
             
-            //As próximas linhas utilizam a mesma lógica da função showVec(),
-            //porém a chamda da função faz com que os botões e as medidas não possam
-            //ser renderizadas por conta da falta de parãmetros que seriam necessários (texturas, rects).
-            //Caso os parâmetros fossem adicionados, tais elementos também seriam mostrados durante
-            //a execução, o que não é o objetivo
+            /*As próximas linhas utilizam a mesma lógica da função showVec(),
+            porém a chamda da função faz com que os botões e as medidas não possam
+            ser renderizadas por conta da falta de parãmetros que seriam necessários (texturas e rects).
+            Isso não foi implementado pois é objetivo do programa esconder os botões enquanto o algorítmo é executado*/
+            /*The next couple lines use the same logic as showVec(),
+            but calling the function causes the buttons and metrics not to be rendered, 
+            since there are no parameters that would be required for them (textures and rects).
+            This is not implemented because program is intended tho hide the buttons while the algorithm is being executed*/
             SDL_Rect rect, quit;
             quit.w = 500 * sizeMultiplier;
             quit.h = 50 * sizeMultiplier;
@@ -1798,7 +1848,8 @@ int main(int argc, char *argv[]){
             SDL_RenderPresent(renderer);
         }
         
-        //Limita a taxa de quadros por segundo
+        //Limita a taxa de quadros por segundo para 60 fps
+        //Limits the frame rate to 60 fps
         frameTime = SDL_GetTicks() - frameStart;
         if(frameDelay > frameTime){
             SDL_Delay(frameDelay - frameTime);
