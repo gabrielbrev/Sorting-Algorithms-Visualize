@@ -33,8 +33,9 @@ struct name_textures{
     SDL_Texture *insertion;
     SDL_Texture *merge;
     SDL_Texture *quick;
+    SDL_Texture *heap;
 };
-struct size_buttons{
+struct size_button_textures{
     SDL_Texture *one;
     SDL_Texture *ten;
     SDL_Texture *hundred;
@@ -53,8 +54,8 @@ struct button_textures{
     SDL_Texture *sort;
     SDL_Texture *randomize;
     struct delay_button delay;
-    struct size_buttons up;
-    struct size_buttons down;
+    struct size_button_textures up;
+    struct size_button_textures down;
 };
 struct number_textures{
     SDL_Texture *zero;
@@ -76,6 +77,19 @@ struct all_textures{
     SDL_Texture *credits;
 };
 typedef struct all_textures programTxtr;
+
+struct bar_info{
+    int value;
+    SDL_Rect rect;
+};
+typedef struct bar_info bars;
+
+struct bars_being_compared{
+    int cmp1 = -1;
+    int cmp2 = -1;
+    int cmp3 = -1;
+};
+typedef struct bars_being_compared cmpBars;
 
 //Carrega as texturas do programa
 //Loads the program textures
@@ -168,6 +182,9 @@ void load_textures(SDL_Renderer *renderer, programTxtr *textures){
     surface = SDL_LoadBMP("./textures/merge_sort_button.bmp");
     textures->names.merge = SDL_CreateTextureFromSurface(renderer, surface);
     SDL_FreeSurface(surface);
+    surface = SDL_LoadBMP("./textures/heap_sort_button.bmp");
+    textures->names.heap = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
 
     surface = SDL_LoadBMP("./textures/zero.bmp");
     textures->numbers.zero = SDL_CreateTextureFromSurface(renderer, surface);
@@ -204,166 +221,215 @@ void load_textures(SDL_Renderer *renderer, programTxtr *textures){
     textures->credits = SDL_CreateTextureFromSurface(renderer, surface);
     SDL_FreeSurface(surface);
 }
+//Pega o tempo passado após 01/01/1970 em milisegundos
+//Gets the time passed since 01/01/1970 in miliseconds
+uint64_t getTime(){
+    using namespace std::chrono;
+    return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+}
 
-//Mostra os valores do vetor em forma de barras na tela
-//Shows the vector’s values as bars on the screen
-void showVec(int vec[], float vecSize, SDL_Renderer *renderer, programTxtr *textures, bool *abort, int cmp1 = -1, int cmp2 = -1, int base = -1)
-{
-    SDL_Rect rect, quit;
-    quit.w = 500 * sizeMultiplier;
-    quit.h = 50 * sizeMultiplier;
-    quit.x = WIDTH - quit.w - 20 * sizeMultiplier;
-    quit.y = 20 * sizeMultiplier;
 
-    float size = vecSize;
-    float rectWidth = ((WIDTH - 50)/size);
-    float spacing = 25;
-    float gap;
-
-    //Calcula o espaçamento entre barras (se existire)
-    //Calculates the gap between the bars (if it exists)
-    gap = rectWidth * 0.2;
-    if(gap < 1)
-    {
-        gap = 0;
+//Printa as informações do vetor
+//Prints the array's info
+void printInfo(bars vec[], int vecSize){
+    std::cout << "v[ ";
+    for(int i = 0; i < vecSize; i++){
+        if(vec[i].value < 0){
+            std::cout << "\033[31m";
+        }
+        std::cout << "\t"  << vec[i].value << "\033[0m";
     }
+    std::cout << "]\n";
+    std::cout << "w[ ";
+    for(int i = 0; i < vecSize; i++){
+        if(vec[i].rect.w < 1){
+            std::cout << "\033[31m";
+        }
+        std::cout << "\t"  << vec[i].rect.w << "\033[0m";
+    }
+    std::cout << "]\n";
+    std::cout << "h[ ";
+    for(int i = 0; i < vecSize; i++){
+        if(vec[i].rect.h < 1){
+            std::cout << "\033[31m";
+        }
+        std::cout << "\t"  << vec[i].rect.h << "\033[0m";
+    }
+    std::cout << "]\n";
+    std::cout << "x[ ";
+    for(int i = 0; i < vecSize; i++){
+        if(vec[i].rect.x < 1){
+            std::cout << "\033[31m";
+        }
+        std::cout << "\t"  << vec[i].rect.x << "\033[0m";
+    }
+    std::cout << "]\n";
+    std::cout << "y[ ";
+    for(int i = 0; i < vecSize; i++){
+        if(vec[i].rect.y < 1){
+            std::cout << "\033[31m";
+        }
+        std::cout << "\t" << vec[i].rect.y << "\033[0m";
+    }
+    std::cout << "]\n\n\n";
+}
 
+//Calcula e posiciona cada barra
+//Calculates and positions each bar
+void setUpBars(bars vec[], int vecSize){
+    float spacing = 25;
+    float totalWidth = WIDTH - spacing * 2;
+    float barWidth = totalWidth/vecSize;
+    float gap = barWidth * 0.2;
+    barWidth -= gap * sizeMultiplier;
+    for(int i = 0; i < vecSize; i++){
+        vec[i].rect.w = barWidth;
+        vec[i].rect.h = ((HEIGHT * 0.75/vecSize) * vec[i].value) + 1;
+        vec[i].rect.x = spacing + (barWidth + gap * sizeMultiplier) * i;
+        vec[i].rect.y = HEIGHT - vec[i].rect.h - spacing;
+    } 
+}
+
+//Renderiza as barras
+//Renders the bars
+void showVec(bars vec[], int vecSize, cmpBars *cmp, SDL_Rect *quit, programTxtr *textures, SDL_Renderer *renderer, bool render, bool complete = false){
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-
-    //Define a posição e tamanho e define a cor de cada barra
-    //Calculates the size and position and sets color of each bar
-    for(int i = 0; i < size; i++)
-    {
-        rect.w = rectWidth - gap * sizeMultiplier;
-        rect.h = ((HEIGHT * 0.75)/size) * vec[i];
-        rect.x = spacing + (rectWidth * i) + gap * sizeMultiplier;
-        rect.y = HEIGHT - rect.h - 25;
-        if(i == base)
-        {
-            SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
-        }
-        else if(i == cmp1)
-        {
-            SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-        }
-        else if(i == cmp2)
-        {
-            SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
-        }
-        else
-        {
-            SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-        }
-        SDL_RenderDrawRect(renderer, &rect);
-        SDL_RenderFillRect(renderer, &rect);
+    if(cmp != NULL){
+        for(int i = 0; i < vecSize; i++){
+            if(i == cmp->cmp1){
+                SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+            }
+            else if(i == cmp->cmp2){
+                SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
+            }
+            else if(i == cmp->cmp3){
+                SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+            }
+            else{
+                SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+            }
+            SDL_RenderDrawRect(renderer, &vec[i].rect);
+            SDL_RenderFillRect(renderer, &vec[i].rect);
+        }     
     }
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    SDL_RenderCopy(renderer, textures->info.quit, NULL, &quit);
-    SDL_RenderPresent(renderer);
-    SDL_Delay(delay);
+    else{
+        for(int i = 0; i < vecSize; i++){
+            if(complete){
+                SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+            }
+            else{
+                SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+            }
+            SDL_RenderDrawRect(renderer, &vec[i].rect);
+            SDL_RenderFillRect(renderer, &vec[i].rect);
+        }     
+    }
+    SDL_RenderCopy(renderer, textures->info.quit, NULL, quit);
+    if(render){
+        SDL_RenderPresent(renderer);
+        if(delay != 0){
+            SDL_Delay(delay);
+        }
+    }
+}
+
+//Seta o vetor para seu estado organizado
+//Sets the array to it's sorted state
+void finishSort(bars vec[], int vecSize){
+    for(int i = 0; i < vecSize; i++){
+        vec[i].value = i + 1;
+    }
+    setUpBars(vec, vecSize);
+}
+
+//Checa se o usuário tentou voltar ao menu ou fechar o programa
+//Checks if the user tried going back to the menu or closing the program
+bool checkQuit(bars vec[], int vecSize, SDL_Event *event, bool *abort){
+    if(SDL_PollEvent(event))
+    {
+        if(event->type == SDL_KEYDOWN)
+        {
+            if(SDLK_ESCAPE == event->key.keysym.sym)
+            {
+                delay = 0;
+                *abort = true;
+                finishSort(vec, vecSize);
+                return true;
+            }
+        }
+        else if(event->type == SDL_QUIT)
+        {
+            programQuit = true;
+            *abort = true;
+            return true;
+        }   
+    }
+    if(*abort){
+        return true;
+    }
+    return false;
 }
 
 //Completa as barras com a cor verde gradativamente, utiliza a mesma logica da função showVec() em sua maior parte
 //Colors the bars green gradually, uses mostly the same logic used in the showVec() function
-void showCompleteVec(int vec[], int vecSize, SDL_Renderer *renderer, programTxtr *textures, bool *abort)
-{
+void showCompleteVec(bars vec[], int vecSize, bool *abort, SDL_Rect *quit, programTxtr *textures, SDL_Renderer *renderer){
     SDL_Event event;
-
-    SDL_Rect rect, quit;
-    quit.w = 500 * sizeMultiplier;
-    quit.h = 50 * sizeMultiplier;
-    quit.x = WIDTH - quit.w - 20 * sizeMultiplier;
-    quit.y = 20 * sizeMultiplier;
-
-    float size = float(vecSize);
-    float rectWidth = ((WIDTH - 50)/size);
-    float spacing = 25;
-    float gap;
-    int complete = 1;  
-    int tempDelay;
-
-    gap = rectWidth * 0.2;
-    if(gap < 1)
-    {
-        gap = 0;
-    }
-
-    for(int c = 0; c < size; c++)
-    {
-        if(SDL_PollEvent(&event))
-        {
-            if(event.type == SDL_KEYDOWN)
-            {
-                if(SDLK_ESCAPE == event.key.keysym.sym)
-                {
-                    delay = 0;
-                    *abort = true;
-                    int complete = 1;
-                    for(int c = 0; c < vecSize; c++){
-                        if(vec[c] != complete)
-                        {
-                            vec[c] = complete;
-                        }
-                        complete++;
-                    }
-                    return;
-                }
-            }   
-            else if(event.type == SDL_QUIT)
-            {
-                programQuit = true;
-                *abort = true;
-                return;
-            }
-        }
+    for(int i = 0; i <= vecSize && !*abort; i++){
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-        for(int i = 0; i < size; i++)
-        {
-            rect.w = rectWidth - gap * sizeMultiplier;
-            rect.h = ((HEIGHT * 0.75)/size) * vec[i];
-            rect.x = spacing + (rectWidth * i) + gap * sizeMultiplier;
-            rect.y = HEIGHT - rect.h - 25;
-            if(i <= complete)
-            {
+        for(int j = 0; j < vecSize && !*abort; j++){
+            if(checkQuit(vec, vecSize, &event, abort)){
+                return;
+            }
+            if(j <= i){
                 SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
             }
-            else
-            {
+            else{
                 SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
             }
-            SDL_RenderDrawRect(renderer, &rect);
-            SDL_RenderFillRect(renderer, &rect);
+            SDL_RenderDrawRect(renderer, &vec[j].rect);
+            SDL_RenderFillRect(renderer, &vec[j].rect);
         }
-        complete++;
-        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-        SDL_RenderCopy(renderer, textures->info.quit, NULL, &quit);
+        SDL_RenderCopy(renderer, textures->info.quit, NULL, quit);
         SDL_RenderPresent(renderer);
-        if(size < 500)
-        {
-            tempDelay = 250/size;
-            SDL_Delay(tempDelay);
-        }
     }
 }
 
+//Troca os valores e tamanhos das barras
+//Swaps values and size of the bars
+void swapBars(bars vec[], int i, int j){
+    bars aux;
+    aux.value = vec[i].value;
+    vec[i].value = vec[j].value;
+    vec[j].value = aux.value;
+
+    aux.rect.h = vec[i].rect.h;
+    vec[i].rect.h = vec[j].rect.h;
+    vec[j].rect.h = aux.rect.h;
+
+    aux.rect.y = vec[i].rect.y;
+    vec[i].rect.y = vec[j].rect.y;
+    vec[j].rect.y = aux.rect.y;
+}
+
 //Zera os valores do vetor
-//Sets all the vector values to zero
-void inicialize(int vec[], int vecSize)
-{
+//Sets all the array values to zero
+void inicialize(bars vec[], int vecSize){
     for(int i = 0; i < vecSize; i++)
     {
-        vec[i] = 0;
+        vec[i].value = 0;
+        vec[i].rect.w = 0;
+        vec[i].rect.h = 0;
+        vec[i].rect.x = 0;
+        vec[i].rect.y = 0;
     }
 }
 
 //Aleatoriza os valores do vetor de acordo com seu tamanho
-//Randomizes the vector values according to the defined size
-void randomize(int vec[], int vecSize)
-{
+//Randomizes the array values according to the defined size
+void randomize(bars vec[], int vecSize){
     int num;
     bool invec;
     for(int i = 0; i < vecSize; i++)
@@ -373,370 +439,275 @@ void randomize(int vec[], int vecSize)
             num = rand() % vecSize + 1;
             for(int j = 0; j < vecSize; j++)
             {
-                if(vec[j] == num)
+                if(vec[j].value == num)
                 {
                     invec = true;
                 }
             }
         }while(invec);
-        vec[i] = num;
+        vec[i].value = num;
     }
 }
 
-void insertionSort(int vec[], int vecSize, SDL_Renderer *renderer, programTxtr *textures, bool *abort)
-{
+void bubbleSort(bars vec[], int vecSize, bool *abort, SDL_Renderer *renderer, SDL_Rect *quit, programTxtr *textures){
+    cmpBars barsCompared;
     SDL_Event event;
-    int aux, a, b;
-    for(int i = 0; i < vecSize - 1; i++)
-    {
-        if(SDL_PollEvent(&event))
-        {
-            if(event.type == SDL_KEYDOWN)
-            {
-                if(SDLK_ESCAPE == event.key.keysym.sym)
-                {
-                    delay = 0;
-                    *abort = true;
-                    int complete = 1;
-                    for(int c = 0; c < vecSize; c++){
-                        if(vec[c] != complete)
-                        {
-                            vec[c] = complete;
-                        }
-                        complete++;
-                    }
-                    return;
-                }
-            }  
-            else if(event.type == SDL_QUIT)
-            {
-                programQuit = true;
-                *abort = true;
-                return;
-            }         
-        }
-
-        if(vec[i + 1] < vec[i])
-        {
-            a = i;
-            b = i + 1;
-            while(vec[a] > vec[b] && a >= 0)
-            {
-                aux = vec[a];
-                vec[a] = vec[b];
-                vec[b] = aux;
-                a--;
-                b--;
-                showVec(vec, vecSize, renderer, textures, abort, b, a);
-            }
-        }
-        showVec(vec, vecSize, renderer, textures, abort, i + 1, i);
-    }
-}
-
-void bubbleSort(int vec[], int vecSize, SDL_Renderer * renderer, programTxtr *textures, bool *abort)
-{
-    SDL_Event event;
-    int aux;
-    for(int i = 0; i < vecSize; i++)
-    {
-        
-        for(int j = i; j < vecSize; j++)
-        {
-            if(SDL_PollEvent(&event))
-            {
-                if(event.type == SDL_KEYDOWN)
-                {
-                    if(SDLK_ESCAPE == event.key.keysym.sym)
-                    {
-                        delay = 0;
-                        *abort = true;
-                        int complete = 1;
-                        for(int c = 0; c < vecSize; c++){
-                            if(vec[c] != complete)
-                            {
-                                vec[c] = complete;
-                            }
-                            complete++;
-                        }
-                        return;
-                    }
-                }
-                else if(event.type == SDL_QUIT)
-                {
-                    programQuit = true;
-                    *abort = true;
-                    return;
-                }   
-            }
-            if(vec[i] > vec[j])
-            {
-                aux = vec[i];
-                vec[i] = vec[j];
-                vec[j] = aux;
-            }
-            showVec(vec, vecSize, renderer, textures, abort, i, j);
-        }
-    }
-
-}
-
-void swap(int *x, int *y)
-{
-    int aux;
-    aux = *x;
-    *x = *y;
-    *y = aux;
-}
-
-void quickSort(int vec[], int start, int end, int vecSize, SDL_Renderer *renderer, programTxtr *textures, bool *abort)
-{
-    SDL_Event event;
-    int i, j, key;
-    if((end - start) < 2)
-    {
-        if((end - start == 1))
-        {
-            if(vec[start] > vec[end])
-            {
-                swap(&vec[start], &vec[end]);
-                showVec(vec, vecSize, renderer, textures, abort, start, end);
-            }
-        }
-    }
-    else
-    {
-        i = start;
-        j = end;
-        key = vec[start];
-        while(j > i)
-        {   
-            if(*abort){
+    for(int i = 0; i < vecSize; i++){
+        for(int j = i; j < vecSize; j++){
+            if(checkQuit(vec, vecSize, &event, abort)){
                 return;
             }
-            if(SDL_PollEvent(&event))
-            {
-                if(event.type == SDL_KEYDOWN)
-                {
-                    if(SDLK_ESCAPE == event.key.keysym.sym)
-                    {
-                        delay = 0;
-                        *abort = true;
-                        int complete = 1;
-                        for(int c = 0; c < vecSize; c++){
-                            if(vec[c] != complete)
-                            {
-                                vec[c] = complete;
-                            }
-                            complete++;
-                        }
-                        return;
-                    }
-                }   
-                else if(event.type == SDL_QUIT)
-                {
-                    programQuit = true;
-                    *abort = true;
-                    return;
-                }        
+            if(vec[i].value > vec[j].value){
+                swapBars(vec, i, j);
             }
-            i++;
-            showVec(vec, vecSize, renderer, textures, abort, i, j, start);
-            while(vec[i] < key)
-            {
-                i++;
-                showVec(vec, vecSize, renderer, textures, abort, i, j, start);
-            }
-            while(vec[j] > key)
-            {
-                j--;
-                showVec(vec, vecSize, renderer, textures, abort, i, j, start);
-            }
-            if(j > i)
-            {
-                swap(&vec[i], &vec[j]);
-                showVec(vec, vecSize, renderer, textures, abort, i, j, start);
-            }
+            barsCompared.cmp1 = i;
+            barsCompared.cmp2 = j;
+            showVec(vec, vecSize, &barsCompared, quit, textures, renderer, true);
         }
-        swap(&vec[start], &vec[j]);
-        showVec(vec, vecSize, renderer, textures, abort, start, j);
-        if(!*abort){
-            quickSort(vec, start, j - 1, vecSize, renderer, textures, abort);
-        }
-        if(!*abort){
-            quickSort(vec, j + 1, end, vecSize, renderer, textures, abort);
-        }     
     }
 }
 
-void selectionSort(int vec[], int vecSize, SDL_Renderer * renderer, programTxtr *textures, bool *abort)
-{
+void selectionSort(bars vec[], int vecSize, bool *abort, SDL_Renderer *renderer, SDL_Rect *quit, programTxtr *textures){
+    cmpBars barsCompared;
     SDL_Event event;
-    int cmp, aux;
-    for(int i = 0; i < vecSize - 1; i++)
-    {
+    int cmp;
+    for(int i = 0; i < vecSize - 1; i++){
         cmp = i;
-        for(int j = i + 1; j < vecSize; j++)
-        {
-            if(SDL_PollEvent(&event))
-            {
-                if(event.type == SDL_KEYDOWN)
-                {
-                    if(SDLK_ESCAPE == event.key.keysym.sym)
-                    {
-                        int complete = 1;
-                        delay = 0;
-                        *abort = true;
-                        for(int c = 0; c < vecSize; c++){
-                            if(vec[c] != complete)
-                            {
-                                vec[c] = complete;
-                            }
-                            complete++;
-                        }
-                        return;
-                    }
-                }    
-                else if(event.type == SDL_QUIT)
-                {
-                    programQuit = true;
-                    *abort = true;
-                    return;
-                }               
-            }           
-            if(vec[j] < vec[cmp])
-            {
+        for(int j = i + 1; j < vecSize; j++){      
+            if(checkQuit(vec, vecSize, &event, abort)){
+                return;
+            }
+            if(vec[j].value < vec[cmp].value){
                 cmp = j;
             }
-            if(vecSize < 1000)
-            {
-                showVec(vec, vecSize, renderer, textures, abort, cmp, j, i);
-            }   
-        } 
-        aux = vec[i];
-        vec[i] = vec[cmp];
-        vec[cmp] = aux;
-        showVec(vec, vecSize, renderer, textures, abort, i, cmp);
+            barsCompared.cmp1 = i;
+            barsCompared.cmp2 = j;
+            barsCompared.cmp3 = cmp;
+            showVec(vec, vecSize, &barsCompared, quit, textures, renderer, true);
+        }
+        swapBars(vec, i, cmp);
     }
-    
 }
 
-void intercalate(int vec[], int start, int end, int mid, int vecSize, SDL_Renderer * renderer, programTxtr *textures, bool *abort){
+void insertionSort(bars vec[], int vecSize, bool *abort, SDL_Renderer *renderer, SDL_Rect *quit, programTxtr *textures){
+    cmpBars barsCompared;
     SDL_Event event;
-    int i, aux[vecSize], freePos = start, start1 = start, start2 = mid + 1;
-    while(start1 <= mid && start2 <= end && *abort == false){
-        if(SDL_PollEvent(&event))
-        {
-            if(event.type == SDL_KEYDOWN)
-            {
-                if(SDLK_ESCAPE == event.key.keysym.sym)
-                {
-                    delay = 0;
-                    *abort = true;
-                    int complete = 1;
-                    for(int c = 0; c < vecSize; c++){
-                        if(vec[c] != complete)
-                        {
-                            vec[c] = complete;
-                        }
-                        complete++;
-                    }
-                    if(*abort == true)
-                    {
-                        return;
-                    }
-                }
-            }    
-            else if(event.type == SDL_QUIT)
-            {
-                programQuit = true;
-                *abort = true;
+    int j;
+    for(int i = 0; i < vecSize - 1; i++){
+        j = i + 1;
+        barsCompared.cmp1 = i + 1;
+        barsCompared.cmp2 = j;
+        while(vec[j].value < vec[j - 1].value && j > 0){
+            if(checkQuit(vec, vecSize, &event, abort)){
                 return;
-            }               
+            }
+            swapBars(vec, j, j - 1);
+            j--;
+            barsCompared.cmp2 = j;
+            showVec(vec, vecSize, &barsCompared, quit, textures, renderer, true);
         }
-        if(vec[start1] > vec[start2]){
-            aux[freePos] = vec[start2];
+        showVec(vec, vecSize, &barsCompared, quit, textures, renderer, true);
+    }
+}
+
+void copyToAux(bars vec[], int x, bars aux[], int y, int vecSize){
+    aux[y].value = vec[x].value;
+    aux[y].rect.y = vec[x].rect.y;
+    aux[y].rect.h = vec[x].rect.h;
+}
+
+void copyFromAux(bars vec[], int x, bars aux[], int y, int vecSize){
+    vec[x].value = aux[y].value;
+    vec[x].rect.y = aux[y].rect.y;
+    vec[x].rect.h = aux[y].rect.h;
+}
+
+void intercalate(bars vec[], int start, int end, int mid, int vecSize, bool *abort, SDL_Renderer *renderer, SDL_Rect *quit, programTxtr *textures){
+    SDL_Event event;
+    cmpBars barsCompared;
+    int i, freePos = start, start1 = start, start2 = mid + 1;
+    bars aux[vecSize];
+    inicialize(aux, vecSize);
+    while(start1 <= mid && start2 <= end && !*abort){
+        if(checkQuit(vec, vecSize, &event, abort)){
+            return;
+        }
+        if(vec[start1].value > vec[start2].value){
+            copyToAux(vec, start2, aux, freePos, vecSize);
             start2++;
-            if(start1 == start2)
-            {
-                showVec(vec, vecSize, renderer, textures, abort, start2, start1 - 1);
-            }
-            else
-            {
-                showVec(vec, vecSize, renderer, textures, abort, start2, start1);
-            }
+            barsCompared.cmp1 = start2;
+            barsCompared.cmp2 = start1;
+            showVec(vec, vecSize, &barsCompared, quit, textures, renderer, true);
         }
         else{
-            aux[freePos] = vec[start1];
+            copyToAux(vec, start1, aux, freePos, vecSize);
             start1++;
-            if(start1 == start2)
-            {
-                showVec(vec, vecSize, renderer, textures, abort, start2, start1 - 1);
-            }
-            else
-            {
-                showVec(vec, vecSize, renderer, textures, abort, start2, start1);
-            }
+            barsCompared.cmp1 = start2;
+            barsCompared.cmp2 = start1;
+            showVec(vec, vecSize, &barsCompared, quit, textures, renderer, true);
         }
         freePos++;
     }
-    if(*abort == false)
-    {
-        for(i = start1; i <= mid; i++){
-            aux[freePos] = vec[i];
-            freePos++;
-            if(i == mid)
-            {
-                showVec(vec, vecSize, renderer, textures, abort, mid, i - 1);
-            }
-            else
-            {
-                showVec(vec, vecSize, renderer, textures, abort, mid, i);
-            }
+    for(i = start1; i <= mid && !*abort; i++){
+        if(checkQuit(vec, vecSize, &event, abort)){
+            return;
         }
-        for(i = start2; i <= end; i++){
-            aux[freePos] = vec[i];
-            freePos++;
-            if(i == end)
-            {
-                showVec(vec, vecSize, renderer, textures, abort, end, i - 1);
-            }
-            else
-            {
-                showVec(vec, vecSize, renderer, textures, abort, end, i);
-            }
+        copyToAux(vec, i, aux, freePos, vecSize);
+        freePos++;
+        barsCompared.cmp1 = mid;
+        barsCompared.cmp2 = i;
+        showVec(vec, vecSize, &barsCompared, quit, textures, renderer, true);
+    }
+    for(i = start2; i <= end && !*abort; i++){
+        if(checkQuit(vec, vecSize, &event, abort)){
+            return;
         }
-        for(i = start; i <= end; i++){
-            vec[i] = aux[i];
-            if(i == end)
-            {
-                showVec(vec, vecSize, renderer, textures, abort, end, i - 1);
-            }
-            else
-            {
-                showVec(vec, vecSize, renderer, textures, abort, end, i);
-            }
-        }        
+        copyToAux(vec, i, aux, freePos, vecSize);
+        freePos++;
+        barsCompared.cmp1 = end;
+        barsCompared.cmp2 = i;
+        showVec(vec, vecSize, &barsCompared, quit, textures, renderer, true);
+    }
+    for(i = start; i <= end && !*abort; i++){
+        
+        if(checkQuit(vec, vecSize, &event, abort)){
+            return;
+        }
+        copyFromAux(vec, i, aux, i, vecSize);
+        barsCompared.cmp1 = end;
+        barsCompared.cmp2 = i;
+        showVec(vec, vecSize, &barsCompared, quit, textures, renderer, true);
     }
 }
 
-void mergeSort(int vec[], int start, int end, int vecSize, SDL_Renderer * renderer, programTxtr *textures, bool *abort){
+void mergeSort(bars vec[], int start, int end, int vecSize, bool *abort, SDL_Renderer *renderer, SDL_Rect *quit, programTxtr *textures){
     int mid;
-    if(*abort == true)
-    {
+    if(!*abort){
+        if(start < end){
+            mid = (start + end)/2;
+            mergeSort(vec, start, mid, vecSize, abort, renderer, quit, textures);
+            mergeSort(vec, mid + 1, end, vecSize, abort, renderer, quit, textures);
+            intercalate(vec, start, end, mid, vecSize, abort, renderer, quit, textures);
+        }
+    }
+}
+
+void quickSort(bars vec[], int start, int end, int vecSize, bool *abort, SDL_Renderer *renderer, SDL_Rect *quit, programTxtr *textures){
+    SDL_Event event;
+    cmpBars barsCompared;
+    int i, j, key;
+    if((end - start) < 2){
+        if(checkQuit(vec, vecSize, &event, abort)){
+            return;
+        }
+        if((end - start == 1)){
+            if(vec[start].value > vec[end].value){
+                swapBars(vec, start, end);
+                barsCompared.cmp1 = start;
+                barsCompared.cmp2 = end;
+                showVec(vec, vecSize, &barsCompared, quit, textures, renderer, true);
+            }
+        }
+    }
+    else{
+        i = start;
+        j = end;
+        key = vec[start].value;
+        barsCompared.cmp1 = i;
+        barsCompared.cmp2 = j;
+        showVec(vec, vecSize, &barsCompared, quit, textures, renderer, true);
+        while(j > i && !*abort){
+            
+            if(checkQuit(vec, vecSize, &event, abort)){
+                return;
+            }
+            i++;
+            barsCompared.cmp1 = i;
+            showVec(vec, vecSize, &barsCompared, quit, textures, renderer, true);
+            while(vec[i].value < key && !*abort){
+                
+                if(checkQuit(vec, vecSize, &event, abort)){
+                    return;
+                }
+                i++;
+                barsCompared.cmp1 = i;
+                showVec(vec, vecSize, &barsCompared, quit, textures, renderer, true);
+            }
+            while(vec[j].value > key && !*abort){
+                
+                if(checkQuit(vec, vecSize, &event, abort)){
+                    return;
+                }
+                j--;
+                barsCompared.cmp2 = j;
+                showVec(vec, vecSize, &barsCompared, quit, textures, renderer, true);
+            }
+            if(j > i){
+                swapBars(vec, i, j);
+                barsCompared.cmp1 = i;
+                barsCompared.cmp2 = j;
+                showVec(vec, vecSize, &barsCompared, quit, textures, renderer, true);
+            }
+        }
+        swapBars(vec, start, j);
+        barsCompared.cmp1 = start;
+        barsCompared.cmp2 = j;
+        showVec(vec, vecSize, &barsCompared, quit, textures, renderer, true);
+        if(!*abort){
+            quickSort(vec, start, j - 1, vecSize, abort, renderer, quit, textures);
+            quickSort(vec, j + 1, end, vecSize, abort, renderer, quit, textures);    
+        }
+    }
+}
+
+void heapify(bars vec[], int start, int end, int vecSize, bool *abort, SDL_Renderer *renderer, SDL_Rect *quit, programTxtr *textures, cmpBars *barsCompared){
+    SDL_Event event;
+    if(checkQuit(vec, vecSize, &event, abort)){
         return;
-    }    
-    if(start < end)
-    {
-        mid = (start + end)/2;
-        mergeSort(vec, start, mid, vecSize, renderer, textures, abort);
-        mergeSort(vec, mid + 1, end, vecSize, renderer, textures, abort);
-        intercalate(vec, start, end, mid, vecSize, renderer, textures, abort);
+    }
+    int right = 2 * start + 2;
+    int left = 2 * start + 1;
+    int greater = start;
+    barsCompared->cmp1 = left;
+    barsCompared->cmp2 = right;
+    barsCompared->cmp3 = greater;
+    showVec(vec, vecSize, barsCompared, quit, textures, renderer, true);
+    if(right <= end && vec[right].value > vec[start].value){
+        greater = right;
+    }
+    if(left <= end && vec[left].value > vec[greater].value){
+        greater = left;
+    }
+    if(greater != start){
+        swapBars(vec, start, greater);
+        showVec(vec, vecSize, barsCompared, quit, textures, renderer, true);
+        if(!*abort){
+            heapify(vec, greater, end, vecSize, abort, renderer, quit, textures, barsCompared);    
+        }
+    }
+}
+
+void heapsort(bars vec[], int vecSize, bool *abort, SDL_Renderer *renderer, SDL_Rect *quit, programTxtr *textures){
+    SDL_Event event;
+    cmpBars barsCompared;
+    for(int i = vecSize/2; i >= 0; i--){
+        if(checkQuit(vec, vecSize, &event, abort)){
+            return;
+        }
+        heapify(vec, i, vecSize - 1, vecSize, abort, renderer, quit, textures, &barsCompared);
+    }
+    for(int end = vecSize - 1; end >= 1; end--){
+        if(checkQuit(vec, vecSize, &event, abort)){
+            return;
+        }
+        swapBars(vec, 0, end);
+        showVec(vec, vecSize, &barsCompared, quit, textures, renderer, true);
+        heapify(vec, 0, end - 1, vecSize, abort, renderer, quit, textures, &barsCompared);
     }
 }
 
 //Mostra o tamanho atual do vetor
-//Displays the current vector size
+//Displays the current array size
 void showSize(int size, SDL_Rect *rect, SDL_Renderer *renderer, programTxtr *textures){
     int aux = size;
     int thousands, hundreds, tens, ones;
@@ -925,7 +896,9 @@ void showTime(int time, int type, SDL_Rect *rect, SDL_Renderer *renderer, progra
     aux -= (tens * 10);
     ones = aux;
 
-    SDL_Rect numSlots[3], text;//Divide o rect principal em "subrects" para renderizar cada número e a medida após
+    //Divide o rect principal em "subrects" para renderizar cada número e medida
+    //Divides the main rect in "subrects" to render each digit an metric
+    SDL_Rect numSlots[3], text;
     numSlots[0] = *rect;
     numSlots[0].w = 20 * sizeMultiplier;
     numSlots[1] = numSlots[0];
@@ -1043,6 +1016,7 @@ void showTime(int time, int type, SDL_Rect *rect, SDL_Renderer *renderer, progra
         }
 
         //Posiciona a medida após a ultima casa utilizada
+        //Positions the metrics after the last used slot
         text.x = numSlots[i].x + numSlots[i].w + 5 * sizeMultiplier;
         text.y = numSlots[i].y;
     }
@@ -1067,13 +1041,6 @@ void showTime(int time, int type, SDL_Rect *rect, SDL_Renderer *renderer, progra
         case 4:
         SDL_RenderCopy(renderer, textures->info.time.milisec, NULL, &text);
     }
-}
-
-uint64_t getTime(){
-//Pega o tempo passado após 01/01/1970 em milisegundos
-//Gets the time passed since 01/01/1970 in miliseconds
-    using namespace std::chrono;
-    return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 }
 
 int main(int argc, char *argv[]){
@@ -1101,14 +1068,16 @@ int main(int argc, char *argv[]){
     programTxtr textures;
     load_textures(renderer, &textures);
 
-    const int maxOption = 5;
+    const int maxOption = 6;
     const int maxSize = 5000;
     const int minSize = 10;
-    float size = 100;
-    //Controle do Vector size
-    //Control the vector size
+    int size = 100;
+    //Controle do array size
+    //Control the array size
 
-    int vec[maxSize];
+    bars vec[maxSize];
+    //Vetor que armazena tanto os valores quando as informações de cada barra
+    //Array that stores the values and info of each bar
 
     int screen = 0;
     //Controle da tela a ser mostrada (menu ou visualizador).
@@ -1169,6 +1138,8 @@ int main(int argc, char *argv[]){
     SDL_Rect randomizeButton;
     SDL_Rect startSortButton;
     SDL_Rect timeInfo[5];
+    SDL_Rect quit;
+    SDL_Rect underBars;
     //Elementos do visualizador
     //Visualizer elements
 
@@ -1181,6 +1152,8 @@ int main(int argc, char *argv[]){
     SDL_Rect intersection;
     //Auxiliar para a detecção de colisões entre o cursor e os botões
     //Auxiliar for collision detection between the cursor and buttons 
+
+    srand(time(NULL));
 
     bool running = true;
     //Início do ciclo
@@ -1267,6 +1240,16 @@ int main(int argc, char *argv[]){
             startSortButton.h = 50 * sizeMultiplier;
             startSortButton.x = 20 * sizeMultiplier;
             startSortButton.y = randomizeButton.h + randomizeButton.y + 2 * sizeMultiplier;
+
+            quit.w = 500 * sizeMultiplier;
+            quit.h = 50 * sizeMultiplier;
+            quit.x = WIDTH - quit.w - 20 * sizeMultiplier;
+            quit.y = 20 * sizeMultiplier;
+
+            underBars.w = WIDTH;
+            underBars.h = 24;
+            underBars.x = 0;
+            underBars.y = HEIGHT - underBars.h;
 
             algorithmOption.h = 200 * sizeMultiplier;
             algorithmOption.w = 600 * sizeMultiplier;
@@ -1415,7 +1398,7 @@ int main(int argc, char *argv[]){
                     {
                         size -= size - maxSize;
                     }
-                    std::cout << "Vector size: " << size << std::endl;    
+                    std::cout << "array size: " << size << std::endl;    
                 }
                 
             }
@@ -1430,7 +1413,7 @@ int main(int argc, char *argv[]){
                     {
                         size -= size - maxSize;
                     }
-                    std::cout << "Vector size: " << size << std::endl;    
+                    std::cout << "array size: " << size << std::endl;    
                 }
                 
             }
@@ -1445,7 +1428,7 @@ int main(int argc, char *argv[]){
                     {
                         size -= size - maxSize;
                     }
-                    std::cout << "Vector size: " << size << std::endl;    
+                    std::cout << "array size: " << size << std::endl;    
                 }
                 
             }
@@ -1456,7 +1439,7 @@ int main(int argc, char *argv[]){
                 {
                     maxSelected = selectDelay;
                     size = maxSize;
-                    std::cout << "Vector size: " << size << std::endl;    
+                    std::cout << "array size: " << size << std::endl;    
                 }
                 
             }
@@ -1471,7 +1454,7 @@ int main(int argc, char *argv[]){
                     {
                         size += minSize - size;
                     }
-                    std::cout << "Vector size: " << size << std::endl;                        
+                    std::cout << "array size: " << size << std::endl;                        
                 }
 
             }
@@ -1486,7 +1469,7 @@ int main(int argc, char *argv[]){
                     {
                         size += minSize - size;
                     }
-                    std::cout << "Vector size: " << size << std::endl;    
+                    std::cout << "array size: " << size << std::endl;    
                 }
                 
             }
@@ -1500,7 +1483,7 @@ int main(int argc, char *argv[]){
                     if(size < minSize){
                         size += minSize - size;
                     }
-                    std::cout << "Vector size: " << size << std::endl;    
+                    std::cout << "array size: " << size << std::endl;    
                 }
                 
             }
@@ -1511,7 +1494,7 @@ int main(int argc, char *argv[]){
                 {
                     minSelected = selectDelay;
                     size = minSize;
-                    std::cout << "Vector size: " << size << std::endl;    
+                    std::cout << "array size: " << size << std::endl;    
                 }
                 
             }
@@ -1522,15 +1505,16 @@ int main(int argc, char *argv[]){
                 {
                     screen = currentOption;
                     std::cout << "Option: " << currentOption << "\nSize: " << size << std::endl;
-                    inicialize(vec, size);
-                    randomize(vec, size);
                     shown = false;
                     sortAborted = false;
                     delaySelected = false;
                     sorted = false; 
                     temporaryDelay = 0;
                     delay = 0;
-                    textures.buttons.delay.temporary = textures.buttons.delay.off;     
+                    textures.buttons.delay.temporary = textures.buttons.delay.off;    
+                    inicialize(vec, size);
+                    randomize(vec, size);
+                    setUpBars(vec, size);
                 }
                 
             }
@@ -1605,7 +1589,10 @@ int main(int argc, char *argv[]){
                 break;
                 case 5:
                 SDL_RenderCopy(renderer, textures.names.quick, NULL, &algorithmOption);
-                break;//Presente para caso haja a implementação de um novo algorítmo
+                break;
+                case 6:
+                SDL_RenderCopy(renderer, textures.names.heap, NULL, &algorithmOption);
+                break;
             }
 
             //Renderizando todos os elementos do menu
@@ -1647,6 +1634,7 @@ int main(int argc, char *argv[]){
             {
                 inicialize(vec, size);
                 randomize(vec, size);
+                setUpBars(vec, size);
                 shown = true;
             }
             //Habilita/Desabilita o delay
@@ -1671,10 +1659,8 @@ int main(int argc, char *argv[]){
                         textures.buttons.delay.temporary = textures.buttons.delay.off;
                     }    
                 }
-                
             }
 
-            
             else if(SDL_IntersectRect(&mouse, &startSortButton, &intersection))
             {
                 SDL_SetTextureColorMod(textures.buttons.sort, 225, 225, 225);
@@ -1688,33 +1674,33 @@ int main(int argc, char *argv[]){
                         delay = temporaryDelay;
                         if(screen == 1)
                         {
-                            bubbleSort(vec, size, renderer, &textures, &sortAborted);
-                            sorted = true;
+                            bubbleSort(vec, size, &sortAborted, renderer, &quit, &textures);
                         }
                         else if(screen == 2)
                         {
-                            selectionSort(vec, size, renderer, &textures, &sortAborted);
-                            sorted = true;
+                            selectionSort(vec, size, &sortAborted, renderer, &quit, &textures);
                         }
                         else if(screen == 3)
                         {
-                            insertionSort(vec, size, renderer, &textures, &sortAborted);
-                            sorted = true;
+                            insertionSort(vec, size, &sortAborted, renderer, &quit, &textures);
                         }
                         else if(screen == 4)
                         {
-                            mergeSort(vec, 0, size - 1, size, renderer, &textures, &sortAborted);
-                            sorted = true;
+                            mergeSort(vec, 0, size - 1, size, &sortAborted, renderer, &quit, &textures);
                         }
                         else if(screen == 5)
                         {
-                            quickSort(vec, 0, size - 1, size, renderer, &textures, &sortAborted);
-                            sorted = true;
+                            quickSort(vec, 0, size - 1, size, &sortAborted, renderer, &quit, &textures);
                         }
+                        else if(screen == 6)
+                        {
+                            heapsort(vec, size, &sortAborted, renderer, &quit, &textures);
+                        }
+                        sorted = true;
                         if(!sortAborted)
                         {
                             sortEndTime = getTime();
-                            showCompleteVec(vec, size, renderer, &textures, &sortAborted);
+                            showCompleteVec(vec, size, &sortAborted, &quit, &textures, renderer);
                             sorted = true;
 
                             sortTotalTime = sortEndTime - sortStartTime;
@@ -1739,7 +1725,7 @@ int main(int argc, char *argv[]){
                 } 
             }
             //Randomiza o vetor
-            //Randomizes the vector
+            //Randomizes the array
             else if(SDL_IntersectRect(&mouse, &randomizeButton, &intersection))
             {
                 SDL_SetTextureColorMod(textures.buttons.randomize, 225, 225, 225);
@@ -1747,63 +1733,18 @@ int main(int argc, char *argv[]){
                 {
                     inicialize(vec, size);
                     randomize(vec, size);
-                    showVec(vec, size, renderer, &textures, &sortAborted);
+                    setUpBars(vec, size);
                     sorted = false;    
                 }
             }
             //Volta para o menu
             //Goes back to the menu
-            else if(escDown || sortAborted)
-            {
+            else if(escDown || sortAborted){
                 screen = 0;
                 escDown = sortAborted = false;
             }
             
-            /*As próximas linhas utilizam a mesma lógica da função showVec(),
-            porém a chamda da função faz com que os botões e as medidas não possam
-            ser renderizadas por conta da falta de parãmetros que seriam necessários (texturas e rects).
-            Isso não foi implementado pois é objetivo do programa esconder os botões enquanto o algorítmo é executado*/
-            /*The next couple lines use the same logic as showVec(),
-            but calling the function causes the buttons and metrics not to be rendered, 
-            since there are no parameters that would be required for them (textures and rects).
-            This is not implemented because program is intended tho hide the buttons while the algorithm is being executed*/
-            SDL_Rect rect, quit;
-            quit.w = 500 * sizeMultiplier;
-            quit.h = 50 * sizeMultiplier;
-            quit.x = WIDTH - quit.w - 20 * sizeMultiplier;
-            quit.y = 20 * sizeMultiplier;
-
-            float rectWidth = ((WIDTH - 50)/size);
-            float spacing = 25;
-            float gap;
-
-            gap = rectWidth * 0.2;
-            if(gap < 1)
-            {
-                gap = 0;
-            }
-
-            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-            SDL_RenderClear(renderer);
-            SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-
-            for(int i = 0; i < size; i++)
-            {
-                rect.w = rectWidth - gap * sizeMultiplier;
-                rect.h = ((HEIGHT * 0.75)/size) * vec[i];
-                rect.x = spacing + (rectWidth * i) + gap * sizeMultiplier;
-                rect.y = HEIGHT - rect.h - 25;
-                if(!sorted){
-                    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-                }
-                else{
-                    SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
-                }
-                SDL_RenderDrawRect(renderer, &rect);
-                SDL_RenderFillRect(renderer, &rect);
-            }
-            SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-            SDL_RenderCopy(renderer, textures.info.quit, NULL, &quit);
+            showVec(vec, size, NULL, &quit, &textures, renderer, false, sorted);
             SDL_RenderCopy(renderer, textures.buttons.delay.temporary, NULL, &delayOption);  
             SDL_RenderCopy(renderer, textures.buttons.randomize, NULL, &randomizeButton);
             if(!sorted)
