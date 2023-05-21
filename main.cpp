@@ -527,6 +527,7 @@ bool checkQuit(bars vec[], int vecSize, SDL_Event *event, bool *abort){
 //Completa as barras com a cor verde gradativamente
 //Colors the bars green gradually
 void showCompleteVec(bars vec[], int vecSize, bool *abort, SDL_Rect *quit, programTxtr *textures, SDL_Renderer *renderer){
+    showVec(vec, vecSize, NULL, quit, textures, renderer, false);
     SDL_Event event;
     for(int i = 0; i <= vecSize && !*abort; i++){
         if(checkQuit(vec, vecSize, &event, abort));
