@@ -14,7 +14,7 @@ float sizeMultiplier = 1;
 //Toma conta da proporção dos elementos
 //Handles the elements’ proportion
 
-struct time{
+struct time_textures{
     SDL_Texture *phrase;
     SDL_Texture *milisec;
     SDL_Texture *sec;
@@ -25,7 +25,7 @@ struct time{
 struct info_textures{
     SDL_Texture *size;
     SDL_Texture *quit;
-    struct time time;
+    struct time_textures time;
 };
 struct name_textures{
     SDL_Texture *bubble;
@@ -42,7 +42,7 @@ struct size_button_textures{
     SDL_Texture *max;
     SDL_Texture *min;
 };
-struct delay_button{
+struct delay_button_textures{
     SDL_Texture *on;
     SDL_Texture *off;
     SDL_Texture *temporary;
@@ -53,7 +53,7 @@ struct button_textures{
     SDL_Texture *start;
     SDL_Texture *sort;
     SDL_Texture *randomize;
-    struct delay_button delay;
+    struct delay_button_textures delay;
     struct size_button_textures up;
     struct size_button_textures down;
 };
@@ -78,9 +78,17 @@ struct all_textures{
 };
 typedef struct all_textures programTxtr;
 
+struct bar_color{
+    uint8_t r = 255;
+    uint8_t g = 255;
+    uint8_t b = 255;
+};
 struct bar_info{
     int value;
     SDL_Rect rect;
+    SDL_Rect lastRect;
+    SDL_Rect replace;
+    struct bar_color color;
 };
 typedef struct bar_info bars;
 
@@ -284,48 +292,193 @@ void setUpBars(bars vec[], int vecSize){
     barWidth -= gap * sizeMultiplier;
     for(int i = 0; i < vecSize; i++){
         vec[i].rect.w = barWidth;
+        if(vec[i].rect.w == 0){
+            vec[i].rect.w = 1;
+        }
         vec[i].rect.h = ((HEIGHT * 0.75/vecSize) * vec[i].value) + 1;
         vec[i].rect.x = spacing + (barWidth + gap * sizeMultiplier) * i;
         vec[i].rect.y = HEIGHT - vec[i].rect.h - spacing;
-    } 
+        vec[i].lastRect = vec[i].rect;
+        vec[i].replace = vec[i].rect;
+    }
+    int maxHeightIndex = 0;
+    for(int i = 0; i < vecSize; i++){
+        if(vec[i].rect.h > vec[maxHeightIndex].rect.h){
+            maxHeightIndex = i;
+        }
+    }
+    for(int i = 0; i < vecSize; i++){
+        vec[i].replace.h = vec[maxHeightIndex].rect.h;
+        vec[i].replace.y = vec[maxHeightIndex].rect.y;
+    }
+}
+
+//Checa se a barra não é branca
+//Checks if the bar is not white
+bool checkColorChange(bars *bar){
+    if(bar->color.r != 255){
+        return true;
+    }
+    else if(bar->color.g != 255){
+        return true;
+    }
+    else if(bar->color.b != 255){
+        return true;
+    }
+    else{
+        return false;
+    }
 }
 
 //Renderiza as barras
 //Renders the bars
 void showVec(bars vec[], int vecSize, cmpBars *cmp, SDL_Rect *quit, programTxtr *textures, SDL_Renderer *renderer, bool render, bool complete = false){
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    SDL_RenderClear(renderer);
     if(cmp != NULL){
-        for(int i = 0; i < vecSize; i++){
-            if(i == cmp->cmp1){
-                SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+        bool renderNewRect = false;
+
+        //Checa se há mais de uma barra por pixel
+        //Checks if there is more than one bar per pixel
+        if(vec[0].rect.x != vec[1].rect.x){
+            for(int i = 0; i < vecSize; i++){
+                renderNewRect = false;
+
+                //Checa se o tamanho da barra nessa posição mudou
+                //Checks if the bar in this position has changed sizes
+                if(vec[i].rect.h != vec[i].lastRect.h){
+                    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+                    SDL_RenderFillRect(renderer, &vec[i].replace);
+                    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+                    renderNewRect = true;
+                    vec[i].lastRect = vec[i].rect;
+                }
+
+                if(checkColorChange(&vec[i])){
+                    vec[i].color.r = 255;
+                    vec[i].color.g = 255;
+                    vec[i].color.b = 255;
+                    SDL_SetRenderDrawColor(renderer, vec[i].color.r, vec[i].color.g, vec[i].color.b, 255);
+                    renderNewRect = true;
+                }
+
+                //Checa se a barra está sendo usada de comparação
+                //Checks if the bar is being used for comparisons
+                if(i == cmp->cmp1){
+                    vec[i].color.r = 255;
+                    vec[i].color.g = 0;
+                    vec[i].color.b = 0;
+                    SDL_SetRenderDrawColor(renderer, vec[i].color.r, vec[i].color.g, vec[i].color.b, 255);
+                    renderNewRect = true;
+                }
+                else if(i == cmp->cmp2){
+                    vec[i].color.r = 0;
+                    vec[i].color.g = 0;
+                    vec[i].color.b = 255;
+                    SDL_SetRenderDrawColor(renderer, vec[i].color.r, vec[i].color.g, vec[i].color.b, 255);
+                    renderNewRect = true;
+                }
+                else if(i == cmp->cmp3){
+                    vec[i].color.r = 0;
+                    vec[i].color.g = 255;
+                    vec[i].color.b = 0;
+                    SDL_SetRenderDrawColor(renderer, vec[i].color.r, vec[i].color.g, vec[i].color.b, 255);
+                    renderNewRect = true;
+                }
+
+                //Renderiza a barra caso haja alterações nela
+                //Renders the bar if it changed in any aspect
+                if(renderNewRect){
+                    SDL_RenderFillRect(renderer, &vec[i].rect);
+                }   
             }
-            else if(i == cmp->cmp2){
-                SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
-            }
-            else if(i == cmp->cmp3){
-                SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
-            }
-            else{
-                SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-            }
-            SDL_RenderDrawRect(renderer, &vec[i].rect);
-            SDL_RenderFillRect(renderer, &vec[i].rect);
-        }     
+        }
+        else{
+            //Quase a mesma lógica, mas como há mais de uma barra por pixel, renderiza somente a maior entre elas
+            //Almost the same logic, but because there is more than one bar per pixel, only renders the talles one
+            for(int i = 0; i < vecSize; i++){
+                renderNewRect = false;
+                if(vec[i].rect.h != vec[i].lastRect.h){
+                    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+                    SDL_RenderFillRect(renderer, &vec[i].replace);
+                    vec[i].lastRect = vec[i].rect;
+                
+                    //Descobre quais barras estão presentes no mesmo pixel que a que mudou
+                    //Figures which bars are in the same pixel as the one that changed
+                    int start = i;
+                    int end = i;
+                    while(vec[start].rect.x == vec[i].rect.x && start >= 0){
+                        start--;
+                    }
+                    start++;
+                    while(vec[end].rect.x == vec[i].rect.x && end < vecSize){
+                        end++;
+                    }
+                    end--;
+
+                    //Descobre qual é a maior entre elas
+                    //Figures wich one is the tallest
+                    int maxHeightIndex = start;
+                    int j = start;
+                    while(j <= end){
+                        if(vec[j].rect.h > vec[maxHeightIndex].rect.h){
+                            maxHeightIndex = j;
+                        }
+                        j++;
+                    }
+
+                    //Renderiza a barra descoberta pois provavelmente não é a que trocou de cor, e isso ainda será checado
+                    //Renders the figured bar beacuse it's probably not the one that has changed colors, and this will still be checked
+                    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+                    SDL_RenderFillRect(renderer, &vec[maxHeightIndex].rect);
+                }
+                if(checkColorChange(&vec[i])){
+                    vec[i].color.r = 255;
+                    vec[i].color.g = 255;
+                    vec[i].color.b = 255;
+                    SDL_SetRenderDrawColor(renderer, vec[i].color.r, vec[i].color.g, vec[i].color.b, 255);
+                    renderNewRect = true;
+                }
+                if(i == cmp->cmp1){
+                    vec[i].color.r = 255;
+                    vec[i].color.g = 0;
+                    vec[i].color.b = 0;
+                    SDL_SetRenderDrawColor(renderer, vec[i].color.r, vec[i].color.g, vec[i].color.b, 255);
+                    renderNewRect = true;
+                }
+                else if(i == cmp->cmp2){
+                    vec[i].color.r = 0;
+                    vec[i].color.g = 0;
+                    vec[i].color.b = 255;
+                    SDL_SetRenderDrawColor(renderer, vec[i].color.r, vec[i].color.g, vec[i].color.b, 255);
+                    renderNewRect = true;
+                }
+                else if(i == cmp->cmp3){
+                    vec[i].color.r = 0;
+                    vec[i].color.g = 255;
+                    vec[i].color.b = 0;
+                    SDL_SetRenderDrawColor(renderer, vec[i].color.r, vec[i].color.g, vec[i].color.b, 255);
+                    renderNewRect = true;
+                }
+                if(renderNewRect){
+                    SDL_RenderFillRect(renderer, &vec[i].rect);
+                }   
+            }     
+        }
     }
     else{
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        SDL_RenderClear(renderer);
+        if(complete){
+            SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+        }
+        else{
+            SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        }
         for(int i = 0; i < vecSize; i++){
-            if(complete){
-                SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
-            }
-            else{
-                SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-            }
             SDL_RenderDrawRect(renderer, &vec[i].rect);
             SDL_RenderFillRect(renderer, &vec[i].rect);
-        }     
+        }
+        SDL_RenderCopy(renderer, textures->info.quit, NULL, quit);    
     }
-    SDL_RenderCopy(renderer, textures->info.quit, NULL, quit);
     if(render){
         SDL_RenderPresent(renderer);
         if(delay != 0){
@@ -371,27 +524,14 @@ bool checkQuit(bars vec[], int vecSize, SDL_Event *event, bool *abort){
     return false;
 }
 
-//Completa as barras com a cor verde gradativamente, utiliza a mesma logica da função showVec() em sua maior parte
-//Colors the bars green gradually, uses mostly the same logic used in the showVec() function
+//Completa as barras com a cor verde gradativamente
+//Colors the bars green gradually
 void showCompleteVec(bars vec[], int vecSize, bool *abort, SDL_Rect *quit, programTxtr *textures, SDL_Renderer *renderer){
     SDL_Event event;
     for(int i = 0; i <= vecSize && !*abort; i++){
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-        SDL_RenderClear(renderer);
-        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-        for(int j = 0; j < vecSize && !*abort; j++){
-            if(checkQuit(vec, vecSize, &event, abort)){
-                return;
-            }
-            if(j <= i){
-                SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
-            }
-            else{
-                SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-            }
-            SDL_RenderDrawRect(renderer, &vec[j].rect);
-            SDL_RenderFillRect(renderer, &vec[j].rect);
-        }
+        if(checkQuit(vec, vecSize, &event, abort));
+        SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+        SDL_RenderFillRect(renderer, &vec[i].rect);
         SDL_RenderCopy(renderer, textures->info.quit, NULL, quit);
         SDL_RenderPresent(renderer);
     }
@@ -1028,6 +1168,8 @@ void showTime(int time, int type, SDL_Rect *rect, SDL_Renderer *renderer, progra
         SDL_RenderCopy(renderer, textures->info.time.error, NULL, &text);
         text.x += text.w + 5 * sizeMultiplier;
     }
+    //Mostra a medida
+    //Renders the metric
     switch(type){
         case 1:
         SDL_RenderCopy(renderer, textures->info.time.hour, NULL, &text);
@@ -1670,6 +1812,13 @@ int main(int argc, char *argv[]){
                 {
                     if(!sorted)
                     {
+                        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+                        SDL_RenderFillRect(renderer, &delayOption);
+                        SDL_RenderFillRect(renderer, &randomizeButton);
+                        SDL_RenderFillRect(renderer, &startSortButton);
+                        //Esconde os botõe
+                        //Hides the buttons
+
                         sortStartTime = getTime();
                         delay = temporaryDelay;
                         if(screen == 1)
