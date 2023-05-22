@@ -560,33 +560,34 @@ void swapBars(bars vec[], int i, int j){
 void inicialize(bars vec[], int vecSize){
     for(int i = 0; i < vecSize; i++)
     {
-        vec[i].value = 0;
+        vec[i].value = i + 1;
         vec[i].rect.w = 0;
         vec[i].rect.h = 0;
         vec[i].rect.x = 0;
         vec[i].rect.y = 0;
     }
+    setUpBars(vec, vecSize);
 }
 
-//Aleatoriza os valores do vetor de acordo com seu tamanho
-//Randomizes the array values according to the defined size
-void randomize(bars vec[], int vecSize){
-    int num;
-    bool invec;
-    for(int i = 0; i < vecSize; i++)
-    {
-        do{
-            invec = false;
-            num = rand() % vecSize + 1;
-            for(int j = 0; j < vecSize; j++)
-            {
-                if(vec[j].value == num)
-                {
-                    invec = true;
-                }
-            }
-        }while(invec);
-        vec[i].value = num;
+//Aleatoriza o vetor
+//Randomizes the array
+void randomize(bars vec[], int vecSize, SDL_Rect *delay, SDL_Rect *randomize, SDL_Rect *startSort, SDL_Rect *quit, programTxtr *textures, SDL_Renderer *renderer, bool firstRender = false){
+    cmpBars empty;
+
+    showVec(vec, vecSize, NULL, quit, textures, renderer, false);
+    SDL_RenderCopy(renderer, textures->buttons.sort, NULL, startSort);
+    SDL_RenderCopy(renderer, textures->buttons.randomize, NULL, randomize);
+    SDL_RenderCopy(renderer, textures->buttons.delay.temporary, NULL, delay);
+    if(firstRender){
+        SDL_RenderPresent(renderer);
+        SDL_Delay(200);
+    }
+    for(int i = 0; i < vecSize; i++){
+        swapBars(vec, i, rand() % vecSize);
+        showVec(vec, vecSize, &empty, quit, textures, renderer, true);
+        if(vecSize < 1000){
+            SDL_Delay(500/vecSize);
+        }
     }
 }
 
@@ -1655,11 +1656,7 @@ int main(int argc, char *argv[]){
                     temporaryDelay = 0;
                     delay = 0;
                     textures.buttons.delay.temporary = textures.buttons.delay.off;    
-                    inicialize(vec, size);
-                    randomize(vec, size);
-                    setUpBars(vec, size);
                 }
-                
             }
 
             //Troca a cor dos botões caso haja um click
@@ -1776,8 +1773,7 @@ int main(int argc, char *argv[]){
             if(!shown)
             {
                 inicialize(vec, size);
-                randomize(vec, size);
-                setUpBars(vec, size);
+                randomize(vec, size, &delayOption, &randomizeButton, &startSortButton, &quit, &textures, renderer, true);
                 shown = true;
             }
             //Habilita/Desabilita o delay
@@ -1817,7 +1813,7 @@ int main(int argc, char *argv[]){
                         SDL_RenderFillRect(renderer, &delayOption);
                         SDL_RenderFillRect(renderer, &randomizeButton);
                         SDL_RenderFillRect(renderer, &startSortButton);
-                        //Esconde os botõe
+                        //Esconde os botões
                         //Hides the buttons
 
                         sortStartTime = getTime();
@@ -1881,9 +1877,7 @@ int main(int argc, char *argv[]){
                 SDL_SetTextureColorMod(textures.buttons.randomize, 225, 225, 225);
                 if(leftMouseDown)
                 {
-                    inicialize(vec, size);
-                    randomize(vec, size);
-                    setUpBars(vec, size);
+                    randomize(vec, size, &delayOption, &randomizeButton, &startSortButton, &quit, &textures, renderer);
                     sorted = false;    
                 }
             }
@@ -1893,7 +1887,6 @@ int main(int argc, char *argv[]){
                 screen = 0;
                 escDown = sortAborted = false;
             }
-            
             showVec(vec, size, NULL, &quit, &textures, renderer, false, sorted);
             SDL_RenderCopy(renderer, textures.buttons.delay.temporary, NULL, &delayOption);  
             SDL_RenderCopy(renderer, textures.buttons.randomize, NULL, &randomizeButton);
