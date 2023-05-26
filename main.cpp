@@ -8,6 +8,7 @@ int WIDTH = 800, HEIGHT = 600;
 //Window dimensions
 
 int delay = 0;
+bool stepMode = false;
 bool programQuit = false;
 
 float sizeMultiplier = 1;
@@ -235,7 +236,6 @@ uint64_t getTime(){
     using namespace std::chrono;
     return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 }
-
 
 //Printa as informações do vetor
 //Prints the array's info
@@ -637,15 +637,14 @@ void insertionSort(bars vec[], int vecSize, bool *abort, SDL_Renderer *renderer,
     int j;
     for(int i = 0; i < vecSize - 1; i++){
         j = i + 1;
-        barsCompared.cmp1 = i + 1;
-        barsCompared.cmp2 = j;
         while(vec[j].value < vec[j - 1].value && j > 0){
             if(checkQuit(vec, vecSize, &event, abort)){
                 return;
             }
             swapBars(vec, j, j - 1);
             j--;
-            barsCompared.cmp2 = j;
+            barsCompared.cmp1 = j;
+            barsCompared.cmp2 = j - 1;
             showVec(vec, vecSize, &barsCompared, quit, textures, renderer, true);
         }
         showVec(vec, vecSize, &barsCompared, quit, textures, renderer, true);
